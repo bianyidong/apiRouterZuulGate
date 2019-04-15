@@ -28,7 +28,8 @@ import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Objects;
 
-public class RoutingFilter extends ZuulFilter {
+public class
+RoutingFilter extends ZuulFilter {
 
     private static Logger log = LoggerFactory.getLogger(RoutingFilter.class);
 
@@ -67,7 +68,6 @@ public class RoutingFilter extends ZuulFilter {
             if (!Objects.equals(null, list) && list.size() != 0) {
                 String id = UUIDUtils.generateShortUuid(); // 主键ID
                 ApiBaseInfo apiBaseInfo = list.get(0);
-                System.out.println("==="+apiBaseInfo);
                 LocalDateTime localDateTime = LocalDateTime.now();
                 DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
                 String currentTime = dateTimeFormatter.format(localDateTime);
@@ -76,7 +76,7 @@ public class RoutingFilter extends ZuulFilter {
                 inputStream = request.getInputStream();
                 String requestBody = StreamUtils.copyToString(inputStream, StandardCharsets.UTF_8);
                 log.info("匹配到转发规则,待转发URL:{},接口名称:{}", apiBaseInfo.getBaseUrl() + apiBaseInfo.getPath(), apiBaseInfo.getApiName());
-                jdbcTemplate.update("insert into api_access_record values(?,?,?,?,?,?,?,?,?,?,?,?,?,?)", new Object[]{id, apiBaseInfo.getApiId(), apiBaseInfo.getApiName(), apiBaseInfo.getBaseUrl() + apiBaseInfo.getPath(),1,accessClientIp, localDateTime.getYear(), localDateTime.getMonth().getValue(), localDateTime.getDayOfMonth(), currentTime, requestBody, "",apiBaseInfo.getApiType(),apiBaseInfo.getApiOwnerId()});
+                jdbcTemplate.update("insert into api_access_record values(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)", new Object[]{id, apiBaseInfo.getApiId(), apiBaseInfo.getApiName(), apiBaseInfo.getBaseUrl() + apiBaseInfo.getPath(),1,accessClientIp, localDateTime.getYear(), localDateTime.getMonth().getValue(), localDateTime.getDayOfMonth(), currentTime, requestBody, "",apiBaseInfo.getApiType(),apiBaseInfo.getApiOwnerId(),0,0});
                 ctx.set(GlobalConstants.RECORD_PRIMARY_KEY,id);
                 ctx.set(GlobalConstants.ACCESS_IP_KEY,accessClientIp);
             } else {
