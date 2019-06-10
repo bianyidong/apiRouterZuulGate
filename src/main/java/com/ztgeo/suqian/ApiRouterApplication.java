@@ -19,20 +19,20 @@ public class ApiRouterApplication {
 		SpringApplication.run(ApiRouterApplication.class, args);
 	}
 
-	@Bean
-	public AccessAuthCheckFilter gateFilter(){
-		return new AccessAuthCheckFilter();
-	}
-
-
-	@Bean
-	public RoutingFilter routeFilter(){
-		return new RoutingFilter();
-	}
-
-	@Bean
-	public ResponseFilter responseFilter(){
-		return new ResponseFilter();
-	}
+//	@Bean
+//	public AccessAuthCheckFilter gateFilter(){
+//		return new AccessAuthCheckFilter();
+//	}
+//
+//
+//	@Bean
+//	public RoutingFilter routeFilter(){
+//		return new RoutingFilter();
+//	}
+//
+//	@Bean
+//	public ResponseFilter responseFilter(){
+//		return new ResponseFilter();
+//	}
 
 }
