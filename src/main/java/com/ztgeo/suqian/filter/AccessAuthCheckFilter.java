@@ -2,11 +2,7 @@ package com.ztgeo.suqian.filter;
 
 import javax.servlet.http.HttpServletRequest;
 
-import com.alibaba.fastjson.JSON;
-import com.alibaba.fastjson.JSONObject;
-import com.sun.tools.javac.jvm.Code;
 import com.ztgeo.suqian.common.ZtgeoBizZuulException;
-import com.ztgeo.suqian.entity.ApiUserRel;
 import com.ztgeo.suqian.msg.CodeMsg;
 import com.ztgeo.suqian.utils.HttpUtils;
 import org.slf4j.Logger;
@@ -15,17 +11,8 @@ import com.netflix.zuul.ZuulFilter;
 import com.netflix.zuul.context.RequestContext;
 import com.netflix.zuul.exception.ZuulException;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.redis.core.ListOperations;
 import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.jdbc.core.BeanPropertyRowMapper;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.util.StreamUtils;
-
-import java.io.InputStream;
-import java.nio.charset.Charset;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
 
 /**
  * 用于鉴权
