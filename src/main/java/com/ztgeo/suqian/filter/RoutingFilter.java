@@ -6,7 +6,7 @@ import com.netflix.zuul.context.RequestContext;
 import com.netflix.zuul.exception.ZuulException;
 import com.ztgeo.suqian.common.GlobalConstants;
 import com.ztgeo.suqian.common.ZtgeoBizZuulException;
-import com.ztgeo.suqian.entity.ApiBaseInfo;
+import com.ztgeo.suqian.entity.ag_datashare.ApiBaseInfo;
 import com.ztgeo.suqian.msg.CodeMsg;
 import com.ztgeo.suqian.utils.HttpUtils;
 import org.slf4j.Logger;
@@ -17,16 +17,13 @@ import org.springframework.jdbc.core.BeanPropertyRowMapper;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.util.StreamUtils;
 
-import javax.servlet.ServletInputStream;
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
-import java.sql.SQLException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 
 public class
@@ -75,8 +72,8 @@ RoutingFilter extends ZuulFilter {
                 String accessClientIp = HttpUtils.getIpAdrress(request);
                 inputStream = request.getInputStream();
                 String requestBody = StreamUtils.copyToString(inputStream, StandardCharsets.UTF_8);
-                log.info("匹配到转发规则,待转发URL:{},接口名称:{}", apiBaseInfo.getBaseUrl() + apiBaseInfo.getPath(), apiBaseInfo.getApiName());
-                jdbcTemplate.update("insert into api_access_record values(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)", new Object[]{id, apiBaseInfo.getApiId(), apiBaseInfo.getApiName(), apiBaseInfo.getBaseUrl() + apiBaseInfo.getPath(), 1, accessClientIp, localDateTime.getYear(), localDateTime.getMonth().getValue(), localDateTime.getDayOfMonth(), currentTime, requestBody, "", apiBaseInfo.getApiType(), apiBaseInfo.getApiOwnerId(), 0, 0});
+                //log.info("匹配到转发规则,待转发URL:{},接口名称:{}", apiBaseInfo.getBaseUrl() + apiBaseInfo.getPath(), apiBaseInfo.getApiName());
+                //jdbcTemplate.update("insert into api_access_record values(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)", new Object[]{id, apiBaseInfo.getApiId(), apiBaseInfo.getApiName(), apiBaseInfo.getBaseUrl() + apiBaseInfo.getPath(), 1, accessClientIp, localDateTime.getYear(), localDateTime.getMonth().getValue(), localDateTime.getDayOfMonth(), currentTime, requestBody, "", apiBaseInfo.getApiType(), apiBaseInfo.getApiOwnerId(), 0, 0});
                 ctx.set(GlobalConstants.RECORD_PRIMARY_KEY, id);
                 ctx.set(GlobalConstants.ACCESS_IP_KEY, accessClientIp);
             } else {
