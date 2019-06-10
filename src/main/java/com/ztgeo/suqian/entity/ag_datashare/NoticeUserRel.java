@@ -6,12 +6,13 @@ import lombok.NoArgsConstructor;
 
 import javax.persistence.Entity;
 import javax.persistence.Id;
+import java.io.Serializable;
 
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-public class NoticeUserRel {
+public class NoticeUserRel implements Serializable {
 
     @Id
     private String rel_id;

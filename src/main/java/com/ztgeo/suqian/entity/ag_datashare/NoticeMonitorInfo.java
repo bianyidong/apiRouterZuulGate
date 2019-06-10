@@ -6,13 +6,14 @@ import lombok.NoArgsConstructor;
 
 import javax.persistence.Entity;
 import javax.persistence.Id;
+import java.io.Serializable;
 import java.util.Date;
 
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-public class NoticeMonitorInfo {
+public class NoticeMonitorInfo implements Serializable {
 
     @Id
     private String id_;
