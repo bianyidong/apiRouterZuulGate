@@ -1,4 +1,4 @@
-package com.ztgeo.suqian.entity.ag_datashare;
+package com.ztgeo.suqian.entity;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -10,17 +10,18 @@ import java.io.Serializable;
 import java.util.Date;
 
 @Data
-@NoArgsConstructor
 @AllArgsConstructor
+@NoArgsConstructor
 @Entity
-public class NoticeMonitorInfo implements Serializable {
+public class NoticeTypeInfo implements Serializable {
 
     @Id
-    private String id_;
-    private String sender_user_id;
-    private Date last_send_time;
-    private String send_status;
+    private String ID;
+    private String type_id;
+    private String type_desc;
     private Date crt_time;
+    private String crt_user_id;
     private Date upd_time;
+    private String upd_user_id;
 
 }

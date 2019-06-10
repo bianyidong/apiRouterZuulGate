@@ -1,4 +1,4 @@
-package com.ztgeo.suqian.entity.ag_datashare;
+package com.ztgeo.suqian.entity;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

@@ -1,4 +1,4 @@
-package com.ztgeo.suqian.entity.ag_datashare;
+package com.ztgeo.suqian.entity;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -12,10 +12,11 @@ import java.io.Serializable;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-public class ApiRouterFilter implements Serializable {
+public class ApiUserFilter implements Serializable {
     @Id
     private String id;
-    private String filter_name;
-    private String filter_bc;
+    private String user_real_id;
+    private String username;
+    private String filter_id;
 
 }

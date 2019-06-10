@@ -1,9 +1,8 @@
 package com.ztgeo.suqian.zhangyu.config;
 
 import com.google.common.collect.Lists;
-import com.ztgeo.suqian.entity.ag_datashare.ApiBaseInfo;
+import com.ztgeo.suqian.entity.ApiBaseInfo;
 import com.ztgeo.suqian.repository.ApiBaseInfoRepository;
-import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Repository;
 
 import javax.annotation.Resource;

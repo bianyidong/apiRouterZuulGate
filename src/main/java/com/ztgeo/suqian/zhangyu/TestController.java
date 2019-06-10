@@ -1,9 +1,8 @@
 package com.ztgeo.suqian.zhangyu;
 
 import com.alibaba.fastjson.JSONObject;
-import com.ztgeo.suqian.entity.ag_datashare.ApiBaseInfo;
+import com.ztgeo.suqian.entity.ApiBaseInfo;
 import com.ztgeo.suqian.repository.ApiBaseInfoRepository;
-import org.junit.Test;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 

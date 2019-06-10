@@ -1,4 +1,4 @@
-package com.ztgeo.suqian.entity.ag_datashare;
+package com.ztgeo.suqian.entity;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -13,20 +13,13 @@ import java.util.Date;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-public class ApiRouterDefine implements Serializable {
+public class BlackListIp implements Serializable {
     @Id
-    private String id;
-    private String path;
-    private String service_id;
-    private String url;
-    private Integer retryable;
-    private Integer enabled;
-    private Integer strip_prefix;
-    private String crt_user_name;
+    private String ip_id;
+    private Long ip_content;
+    private String ip_note;
     private String crt_user_id;
     private Date crt_time;
-    private String upd_user_name;
     private String upd_user_id;
     private Date upd_time;
-
 }
