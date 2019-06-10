@@ -7,9 +7,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cloud.netflix.zuul.RoutesRefreshedEvent;
 import org.springframework.cloud.netflix.zuul.filters.RouteLocator;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
 
 /**
  * 定义zuul网关本身的操作
@@ -23,18 +25,16 @@ public class RouteController {
 
     @Autowired
     ApplicationEventPublisher applicationEventPublisher;
-
     private static final Logger log = LoggerFactory.getLogger(RouteController.class);
-
     @Autowired
     RouteLocator routeLocator;
 
-    @GetMapping("refreshRouteList")
+    //@GetMapping("refreshRouteList")
+    @Scheduled(fixedRate = 200000)
     public String refreshRouteList(){
-        log.info("======刷新路由列表完成======");
+        //log.info("======刷新路由列表完成======");
         RoutesRefreshedEvent routesRefreshedEvent = new RoutesRefreshedEvent(routeLocator);
         applicationEventPublisher.publishEvent(routesRefreshedEvent);
         return ResultMap.ok().toString();
     }
-
 }

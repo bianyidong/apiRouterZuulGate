@@ -7,6 +7,7 @@ public enum CodeMsg {
     ACCESS_DENY(402, "无访问权限"),
     BLACK_USER(403,"对不起，您的IP已被列入黑名单,如需恢复,请联系平台管理人员"),
     NOT_FOUND(404,"无效请求，转发失败"),
+    NOT_FOUNDUSER(405,"访问者没有权限，请开放权限"),
     FAIL(500, "平台网关内部错误");
 
     private CodeMsg(int statusCode, String message) {

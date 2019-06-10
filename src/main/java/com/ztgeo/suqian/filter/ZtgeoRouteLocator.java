@@ -123,16 +123,18 @@ public class ZtgeoRouteLocator extends SimpleRouteLocator implements Refreshable
 		 */
 		private Boolean retryable;
 
+		private Boolean enabled;
 		public ZuulRouteVO() {
 		}
 
-		public ZuulRouteVO(String id, String path, String serviceId, String url, boolean stripPrefix, Boolean retryable) {
+		public ZuulRouteVO(String id, String path, String serviceId, String url, boolean stripPrefix, Boolean retryable,Boolean enabled) {
 			this.id = id;
 			this.path = path;
 			this.serviceId = serviceId;
 			this.url = url;
 			this.stripPrefix = stripPrefix;
 			this.retryable = retryable;
+			this.enabled=enabled;
 		}
 
 		public String getId() {
@@ -181,6 +183,14 @@ public class ZtgeoRouteLocator extends SimpleRouteLocator implements Refreshable
 
 		public void setRetryable(Boolean retryable) {
 			this.retryable = retryable;
+		}
+
+		public Boolean getEnabled() {
+			return enabled;
+		}
+
+		public void setEnabled(Boolean enabled) {
+			this.enabled = enabled;
 		}
 
 		@Override
