@@ -1,7 +1,6 @@
 package com.ztgeo.suqian.common;
 
 import com.netflix.zuul.exception.ZuulException;
-import com.ztgeo.suqian.filter.RoutingFilter;
 import com.ztgeo.suqian.msg.CodeMsg;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

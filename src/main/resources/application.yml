@@ -7,6 +7,13 @@ spring:
       url: jdbc:mysql://172.18.0.147:3306/ag_datashare?useUnicode=true&characterEncoding=UTF-8
       username: root
       password: 123456
+  redis:
+     host: 127.0.0.1
+     port: 6379
+     timeout: 1000
+  data:
+     mongodb:
+     uri: mongodb://ztgeo:123456@localhost:27017/http_db
 server:
   port: 8001
 zuul:
@@ -16,3 +23,9 @@ zuul:
     socket-timeout-millis: 60000
     max-total-connections: 1000
     max-per-route-connections: 50
+customAttributes:
+  # 存储用户发送数据的数据库名
+  #接口转发的数据库名
+  dbName: "http_db"
+  #通知的数据库名
+  dbNoticeName: "httpNotice_db"

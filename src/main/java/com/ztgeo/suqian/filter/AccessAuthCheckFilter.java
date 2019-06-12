@@ -13,10 +13,12 @@ import com.netflix.zuul.exception.ZuulException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.stereotype.Component;
 
 /**
  * 用于鉴权
  */
+@Component
 public class AccessAuthCheckFilter extends ZuulFilter {
 
     private static Logger log = LoggerFactory.getLogger(AccessAuthCheckFilter.class);

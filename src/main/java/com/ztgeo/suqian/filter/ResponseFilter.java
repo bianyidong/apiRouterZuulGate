@@ -12,6 +12,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cloud.netflix.zuul.filters.support.FilterConstants;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.stereotype.Component;
 import org.springframework.util.StreamUtils;
 
 import java.io.*;
@@ -24,6 +25,7 @@ import java.util.Objects;
  * @author zoupeidong
  * @version 2018-12-7
  */
+@Component
 public class ResponseFilter extends ZuulFilter {
 
     private static Logger log = LoggerFactory.getLogger(ResponseFilter.class);
