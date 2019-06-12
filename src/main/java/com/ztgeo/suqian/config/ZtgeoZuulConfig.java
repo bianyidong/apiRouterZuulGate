@@ -1,6 +1,7 @@
 package com.ztgeo.suqian.config;
 
 import com.ztgeo.suqian.filter.ZtgeoRouteLocator;
+import lombok.Data;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.web.ServerProperties;
 import org.springframework.cloud.netflix.zuul.filters.RouteLocator;
@@ -14,6 +15,7 @@ import java.util.List;
 
 
 @Configuration
+@Data
 public class ZtgeoZuulConfig {
 	
 	@Autowired
