@@ -2,6 +2,8 @@ package com.ztgeo.suqian.filter;
 
 import javax.servlet.http.HttpServletRequest;
 
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONObject;
 import com.ztgeo.suqian.common.ZtgeoBizZuulException;
 import com.ztgeo.suqian.msg.CodeMsg;
 import com.ztgeo.suqian.utils.HttpUtils;
@@ -14,14 +16,18 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StreamUtils;
+
+import java.io.InputStream;
+import java.nio.charset.Charset;
 
 /**
  * 用于鉴权
  */
 @Component
-public class AccessAuthCheckFilter extends ZuulFilter {
+public class BodyDataCheckFilter extends ZuulFilter {
 
-    private static Logger log = LoggerFactory.getLogger(AccessAuthCheckFilter.class);
+    private static Logger log = LoggerFactory.getLogger(BodyDataCheckFilter.class);
     @Autowired
     private JdbcTemplate jdbcTemplate;
     @Autowired
@@ -30,16 +36,21 @@ public class AccessAuthCheckFilter extends ZuulFilter {
     @Override
     public Object run() throws ZuulException {
         try {
-            log.info("=================进入pre过滤器,校验权限=====================");
+            log.info("=================进入安全密钥数据验证过滤器,=====================");
             // 获取request
             RequestContext ctx = RequestContext.getCurrentContext();
             HttpServletRequest request = ctx.getRequest();
             log.info("访问者IP:{}", HttpUtils.getIpAdrress(request));
-//            InputStream in = ctx.getRequest().getInputStream();
-//            String body = StreamUtils.copyToString(in, Charset.forName("UTF-8"));
-//            System.out.println("body:" + body);
-//            JSONObject jsonObject = JSON.parseObject(body);
-//            System.out.println(jsonObject.get("token"));
+            //1.获取heard中的userID和ApiID
+
+            //2.获取body中的加密和加签数据并做解密验签
+            InputStream in = ctx.getRequest().getInputStream();
+            String body = StreamUtils.copyToString(in, Charset.forName("UTF-8"));
+            System.out.println("body:" + body);
+            JSONObject jsonObject = JSON.parseObject(body);
+            String data=jsonObject.get("data").toString();
+            String sign=jsonObject.get("sign").toString();
+            System.out.println(data);
 //            jsonObject.get("token").toString();
 //            JSONObject jsonObject1 = JSON.parseObject(jsonObject.get("token").toString());
 //            System.out.println(jsonObject1.get("userID"));
@@ -52,7 +63,7 @@ public class AccessAuthCheckFilter extends ZuulFilter {
 //           }
 
             // 检验是否在IP黑名单中
-            //ListOperations<String,Object> listOperations = redisTemplate.opsForList();
+//            ListOperations<String,Object> listOperations = redisTemplate.opsForList();
 //            List<Object> list = listOperations.range("ip-black-list",0,-1);
 //            String realIp = HttpUtils.getIpAdrress(request);
 //            boolean ipContains = list.contains(realIp);

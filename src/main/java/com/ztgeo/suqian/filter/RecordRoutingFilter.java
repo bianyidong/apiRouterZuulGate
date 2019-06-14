@@ -64,7 +64,7 @@ RecordRoutingFilter extends ZuulFilter {
     public Object run() throws ZuulException {
         InputStream inputStream = null;
         try {
-            log.info("=================进入routing过滤器,待转发=====================");
+            log.info("=================进入日志记录过滤器=====================");
             RequestContext ctx = RequestContext.getCurrentContext();
             Object routeHost = ctx.get("routeHost");
             Object requestURI = ctx.get(FilterConstants.REQUEST_URI_KEY);

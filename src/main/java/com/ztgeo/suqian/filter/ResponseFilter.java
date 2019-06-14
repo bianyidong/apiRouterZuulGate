@@ -59,10 +59,10 @@ public class ResponseFilter extends ZuulFilter {
             inputStream = ctx.getResponseDataStream();
             String rspBody = ctx.getResponseBody();
             // 获取记录主键ID(来自routing过滤器保存的上下文)
-            Object recordID = ctx.get(GlobalConstants.RECORD_PRIMARY_KEY);
-            Object accessClientIp = ctx.get(GlobalConstants.ACCESS_IP_KEY);
-            if (Objects.equals(null, accessClientIp) || Objects.equals(null, recordID))
-                throw new ZtgeoBizZuulException(CodeMsg.FAIL,"访问者IP或记录ID未获取到");
+//            Object recordID = ctx.get(GlobalConstants.RECORD_PRIMARY_KEY);
+//            Object accessClientIp = ctx.get(GlobalConstants.ACCESS_IP_KEY);
+//            if (Objects.equals(null, accessClientIp) || Objects.equals(null, recordID))
+//                throw new ZtgeoBizZuulException(CodeMsg.FAIL,"访问者IP或记录ID未获取到");
             if(!Objects.equals(null,inputStream)){
                 // 获取返回的body
                 ByteArrayOutputStream byteArrayOutputStream = StreamOperateUtils.cloneInputStreamToByteArray(inputStream);
@@ -74,18 +74,18 @@ public class ResponseFilter extends ZuulFilter {
                     responseBody = "";
                     throw new ZtgeoBizZuulException(CodeMsg.FAIL,"响应报文未获取到");
                 }
-                log.info("接收到{}返回的数据,正在入库,记录ID:{}", accessClientIp,recordID);
-                jdbcTemplate.update("update api_access_record aar set aar.response_data = ? where aar.id = ?", new Object[]{responseBody, recordID});
+//                log.info("接收到{}返回的数据,正在入库,记录ID:{}", accessClientIp,recordID);
+//                jdbcTemplate.update("update api_access_record aar set aar.response_data = ? where aar.id = ?", new Object[]{responseBody, recordID});
                 log.info("入库完成");
                 ctx.setResponseDataStream(inputStreamNew);
             }else if(!Objects.equals(null,rspBody)){
-                log.info("接收到{}返回的数据,正在入库,记录ID:{}", accessClientIp,recordID);
-                jdbcTemplate.update("update api_access_record aar set aar.response_data = ? where aar.id = ?", new Object[]{rspBody, recordID});
+//                log.info("接收到{}返回的数据,正在入库,记录ID:{}", accessClientIp,recordID);
+//                jdbcTemplate.update("update api_access_record aar set aar.response_data = ? where aar.id = ?", new Object[]{rspBody, recordID});
                 log.info("入库完成");
                 ctx.setResponseBody(rspBody);
             }else {
-                log.info("未接收到{}返回的任何数据,记录ID:{}", accessClientIp,recordID);
-                jdbcTemplate.update("update api_access_record aar set aar.response_data = ? where aar.id = ?", new Object[]{"", recordID});
+//                log.info("未接收到{}返回的任何数据,记录ID:{}", accessClientIp,recordID);
+//                jdbcTemplate.update("update api_access_record aar set aar.response_data = ? where aar.id = ?", new Object[]{"", recordID});
                 log.info("记录完成");
             }
             return null;
