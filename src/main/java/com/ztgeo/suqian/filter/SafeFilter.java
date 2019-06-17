@@ -4,34 +4,46 @@ import javax.servlet.http.HttpServletRequest;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
+import com.ztgeo.suqian.common.CryptographyOperation;
 import com.ztgeo.suqian.common.ZtgeoBizZuulException;
+import com.ztgeo.suqian.config.RedisOperator;
+import com.ztgeo.suqian.entity.ApiBaseInfo;
 import com.ztgeo.suqian.msg.CodeMsg;
 import com.ztgeo.suqian.utils.HttpUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import com.netflix.zuul.ZuulFilter;
 import com.netflix.zuul.context.RequestContext;
 import com.netflix.zuul.exception.ZuulException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cloud.netflix.zuul.filters.support.FilterConstants;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.jdbc.core.BeanPropertyRowMapper;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StreamUtils;
 
 import java.io.InputStream;
 import java.nio.charset.Charset;
+import java.util.List;
+
+import static com.ztgeo.suqian.common.GlobalConstants.USER_REDIS_SESSION;
+
 
 /**
  * 用于鉴权
  */
 @Component
-public class BodyDataCheckFilter extends ZuulFilter {
+public class SafeFilter extends ZuulFilter {
 
-    private static Logger log = LoggerFactory.getLogger(BodyDataCheckFilter.class);
+    private static Logger log = LoggerFactory.getLogger(SafeFilter.class);
     @Autowired
     private JdbcTemplate jdbcTemplate;
     @Autowired
-    private RedisTemplate redisTemplate;
+    private RedisOperator redis;
+
 
     @Override
     public Object run() throws ZuulException {
@@ -42,6 +54,10 @@ public class BodyDataCheckFilter extends ZuulFilter {
             HttpServletRequest request = ctx.getRequest();
             log.info("访问者IP:{}", HttpUtils.getIpAdrress(request));
             //1.获取heard中的userID和ApiID
+            String userID=request.getHeader("form_user");
+            String apiID=request.getHeader("api_id");
+            System.out.println(apiID);
+
 
             //2.获取body中的加密和加签数据并做解密验签
             InputStream in = ctx.getRequest().getInputStream();
@@ -51,6 +67,35 @@ public class BodyDataCheckFilter extends ZuulFilter {
             String data=jsonObject.get("data").toString();
             String sign=jsonObject.get("sign").toString();
             System.out.println(data);
+            if (StringUtils.isBlank(data) || StringUtils.isBlank(sign))
+                throw new ZtgeoBizZuulException(CodeMsg.PARAMS_ERROR, "未获取到数据或签名");
+
+            //获取redis中的key值
+            String str = redis.get(USER_REDIS_SESSION +":"+userID);
+            JSONObject getjsonObject = JSONObject.parseObject(str);
+            String Symmetric_pubkey=getjsonObject.getString("Symmetric_pubkey");
+            String Sign_secret_key = getjsonObject.getString("Sign_secret_key");
+            String Sign_pub_key=getjsonObject.getString("Sign_pub_key");
+            String Sign_pt_secret_key=getjsonObject.getString("Sign_pt_secret_key");
+            String Sign_pt_pub_key=getjsonObject.getString("Sign_pt_pub_key");
+            // 解密数据
+            String reqDecryptData = CryptographyOperation.aesDecrypt(Symmetric_pubkey, data);
+            // 验证签名
+            boolean verifyResult = CryptographyOperation.signatureVerify(Sign_pub_key, reqDecryptData, sign);
+            List<ApiBaseInfo> apiBaseInfo = jdbcTemplate.query(" select abi.api_owner_id FROM api_base_info abi where abi.api_id ='" + apiID + "'",new BeanPropertyRowMapper<>(ApiBaseInfo.class));
+            System.out.println(apiBaseInfo.get(0).getApi_owner_id());
+            String apiUserID = redis.get(USER_REDIS_SESSION +":"+apiBaseInfo.get(0).getApi_owner_id());
+            JSONObject apiUserIDJson  = JSONObject.parseObject(apiUserID);
+            String Symmetric_pubkeyapiUserIDJson=getjsonObject.getString("Symmetric_pubkey");
+            String Sign_secret_keyapiUserIDJson = apiUserIDJson.getString("Sign_secret_key");
+            String Sign_pub_keyapiUserIDJson=apiUserIDJson.getString("Sign_pub_key");
+            String Sign_pt_secret_keyapiUserIDJson=apiUserIDJson.getString("Sign_pt_secret_key");
+            String Sign_pt_pub_keyapiUserIDJson=apiUserIDJson.getString("Sign_pt_pub_key");
+            //重新加密加签
+            String receiveEncryptData = CryptographyOperation.aesEncrypt(Symmetric_pubkeyapiUserIDJson, reqDecryptData);
+            String receiveSign = CryptographyOperation.generateSign(Sign_pt_secret_key, receiveEncryptData);
+            //重新加载到requset中
+
 //            jsonObject.get("token").toString();
 //            JSONObject jsonObject1 = JSON.parseObject(jsonObject.get("token").toString());
 //            System.out.println(jsonObject1.get("userID"));
@@ -83,7 +128,15 @@ public class BodyDataCheckFilter extends ZuulFilter {
 
     @Override
     public boolean shouldFilter() {
-        return true;
+        RequestContext ctx = RequestContext.getCurrentContext();
+        HttpServletRequest request = ctx.getRequest();
+        String apiID=request.getHeader("api_id");
+        int count = jdbcTemplate.queryForObject("SELECT COUNT(0) from api_user_filter  where api_id='" + apiID + "' and filter_bc='SafeFilter'",Integer.class);
+        if (count>0){
+            return true;
+        }else {
+            return false;
+        }
     }
 
     @Override
@@ -93,7 +146,7 @@ public class BodyDataCheckFilter extends ZuulFilter {
 
     @Override
     public String filterType() {
-        return "pre";
+        return FilterConstants.ROUTE_TYPE;
     }
 
 

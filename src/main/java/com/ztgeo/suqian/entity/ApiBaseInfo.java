@@ -150,4 +150,25 @@ public class ApiBaseInfo implements Serializable {
     public void setUpd_time(Date upd_time) {
         this.upd_time = upd_time;
     }
+
+    @Override
+    public String toString() {
+        return "ApiBaseInfo{" +
+                "api_id='" + api_id + '\'' +
+                ", api_pubkey='" + api_pubkey + '\'' +
+                ", api_name='" + api_name + '\'' +
+                ", base_url='" + base_url + '\'' +
+                ", path='" + path + '\'' +
+                ", method='" + method + '\'' +
+                ", enabled_status=" + enabled_status +
+                ", responsible_person_name='" + responsible_person_name + '\'' +
+                ", responsible_person_tel='" + responsible_person_tel + '\'' +
+                ", api_owner_id='" + api_owner_id + '\'' +
+                ", api_owner_name='" + api_owner_name + '\'' +
+                ", crt_user_id='" + crt_user_id + '\'' +
+                ", crt_time=" + crt_time +
+                ", upd_user_id='" + upd_user_id + '\'' +
+                ", upd_time=" + upd_time +
+                '}';
+    }
 }
