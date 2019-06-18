@@ -125,7 +125,7 @@ GeneralFilter extends ZuulFilter {
         } catch (ZuulException z) {
             throw new ZtgeoBizZuulException(z, z.getMessage(), z.nStatusCode, z.errorCause);
         } catch (Exception s) {
-            throw new ZtgeoBizZuulException(s, CodeMsg.FAIL, "routing过滤器内部异常");
+            throw new ZtgeoBizZuulException(s, CodeMsg.FAIL, "通用转发过滤器内部异常");
         } finally {
             try {
                 if (!Objects.equals(null, inputStream)) {

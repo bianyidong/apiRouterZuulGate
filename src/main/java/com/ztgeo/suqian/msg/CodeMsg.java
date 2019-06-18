@@ -18,7 +18,8 @@ public enum CodeMsg {
     BLACK_USER(403,"对不起，您的IP已被列入黑名单,如需恢复,请联系平台管理人员"),
     NOT_FOUND(404,"无效请求，转发失败"),
     NOT_FOUNDUSER(405,"访问者没有权限，请开放权限"),
-    PARAMS_ERROR(406,"参数错误"),
+    SIGN_ERROR(406,"验签失败"),
+    PARAMS_ERROR(407,"参数错误"),
     FAIL(500, "平台网关内部错误");
 
     private CodeMsg(int statusCode, String message) {
