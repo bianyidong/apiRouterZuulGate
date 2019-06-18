@@ -3,7 +3,6 @@ package com.ztgeo.suqian.filter;
 import com.netflix.zuul.ZuulFilter;
 import com.netflix.zuul.context.RequestContext;
 import com.netflix.zuul.exception.ZuulException;
-import com.ztgeo.suqian.common.GlobalConstants;
 import com.ztgeo.suqian.common.ZtgeoBizZuulException;
 import com.ztgeo.suqian.msg.CodeMsg;
 import com.ztgeo.suqian.utils.StreamOperateUtils;
@@ -15,11 +14,15 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StreamUtils;
 
-import java.io.*;
+import javax.servlet.http.HttpServletRequest;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.Objects;
 
-import static com.ztgeo.suqian.filter.GeneralFilter.getGeneral;
+import static com.ztgeo.suqian.filter.SafeFilter.getSafeBool;
 
 /**
  * 响应过滤器
@@ -28,9 +31,9 @@ import static com.ztgeo.suqian.filter.GeneralFilter.getGeneral;
  * @version 2018-12-7
  */
 @Component
-public class ResponseFilter extends ZuulFilter {
+public class ResponseSafeFilter extends ZuulFilter {
 
-    private static Logger log = LoggerFactory.getLogger(ResponseFilter.class);
+    private static Logger log = LoggerFactory.getLogger(ResponseSafeFilter.class);
 
     @Autowired
     private JdbcTemplate jdbcTemplate;
@@ -47,14 +50,14 @@ public class ResponseFilter extends ZuulFilter {
 
     @Override
     public boolean shouldFilter() {
-        return getGeneral(jdbcTemplate);
+        return getSafeBool(jdbcTemplate);
     }
 
 
 
     @Override
     public Object run() throws ZuulException {
-        log.info("=================进入post通用过滤器,接收返回的数据=====================");
+        log.info("=================进入post安全过滤器,接收返回的数据=====================");
         InputStream inputStream = null;
         InputStream inputStreamOld = null;
         InputStream inputStreamNew = null;
@@ -62,11 +65,11 @@ public class ResponseFilter extends ZuulFilter {
             RequestContext ctx = RequestContext.getCurrentContext();
             inputStream = ctx.getResponseDataStream();
             String rspBody = ctx.getResponseBody();
-             //获取记录主键ID(来自routing过滤器保存的上下文)
-            Object recordID = ctx.get(GlobalConstants.RECORD_PRIMARY_KEY);
-            Object accessClientIp = ctx.get(GlobalConstants.ACCESS_IP_KEY);
-            if (Objects.equals(null, accessClientIp) || Objects.equals(null, recordID))
-                throw new ZtgeoBizZuulException(CodeMsg.FAIL,"访问者IP或记录ID未获取到");
+            // 获取记录主键ID(来自routing过滤器保存的上下文)
+//            Object recordID = ctx.get(GlobalConstants.RECORD_PRIMARY_KEY);
+//            Object accessClientIp = ctx.get(GlobalConstants.ACCESS_IP_KEY);
+//            if (Objects.equals(null, accessClientIp) || Objects.equals(null, recordID))
+//                throw new ZtgeoBizZuulException(CodeMsg.FAIL,"访问者IP或记录ID未获取到");
             if(!Objects.equals(null,inputStream)){
                 // 获取返回的body
                 ByteArrayOutputStream byteArrayOutputStream = StreamOperateUtils.cloneInputStreamToByteArray(inputStream);
