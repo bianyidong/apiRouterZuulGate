@@ -11,6 +11,7 @@ import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import com.netflix.zuul.http.ServletInputStreamWrapper;
 import com.ztgeo.suqian.common.CryptographyOperation;
+import com.ztgeo.suqian.common.GlobalConstants;
 import com.ztgeo.suqian.common.ZtgeoBizRuntimeException;
 import com.ztgeo.suqian.common.ZtgeoBizZuulException;
 import com.ztgeo.suqian.config.RedisOperator;
@@ -89,28 +90,24 @@ public class SafeFilter extends ZuulFilter {
             String str = redis.get(USER_REDIS_SESSION +":"+userID);
             JSONObject getjsonObject = JSONObject.parseObject(str);
             String Symmetric_pubkey=getjsonObject.getString("Symmetric_pubkey");
-            String Sign_secret_key = getjsonObject.getString("Sign_secret_key");
             String Sign_pub_key=getjsonObject.getString("Sign_pub_key");
             String Sign_pt_secret_key=getjsonObject.getString("Sign_pt_secret_key");
-            String Sign_pt_pub_key=getjsonObject.getString("Sign_pt_pub_key");
 
+            if (StringUtils.isBlank(Symmetric_pubkey) || StringUtils.isBlank(Sign_pub_key)|| StringUtils.isBlank(Sign_pt_secret_key))
+                throw new ZtgeoBizRuntimeException(CodeMsg.FAIL, "未查询到接收方密钥信息");
             // 验证签名
             boolean verifyResult = CryptographyOperation.signatureVerify(Sign_pub_key, data, sign);
             if (Objects.equals(verifyResult, false))
                 throw new ZtgeoBizRuntimeException(CodeMsg.SIGN_ERROR);
             // 解密数据
             String reqDecryptData = CryptographyOperation.aesDecrypt(Symmetric_pubkey, data);
-
             List<ApiBaseInfo> list = jdbcTemplate.query(" select * FROM api_base_info abi where abi.api_id ='" + apiID + "'",new BeanPropertyRowMapper<>(ApiBaseInfo.class));
             ApiBaseInfo apiBaseInfo=list.get(0);
             System.out.println(apiBaseInfo.getApi_owner_id());
             String apiUserID = redis.get(USER_REDIS_SESSION +":"+apiBaseInfo.getApi_owner_id());
             JSONObject apiUserIDJson  = JSONObject.parseObject(apiUserID);
             String Symmetric_pubkeyapiUserIDJson=apiUserIDJson.getString("Symmetric_pubkey");
-            //String Sign_secret_keyapiUserIDJson = apiUserIDJson.getString("Sign_secret_key");
             String Sign_pub_keyapiUserIDJson=apiUserIDJson.getString("Sign_pub_key");
-            String Sign_pt_secret_keyapiUserIDJson=apiUserIDJson.getString("Sign_pt_secret_key");
-            String Sign_pt_pub_keyapiUserIDJson=apiUserIDJson.getString("Sign_pt_pub_key");
             if (StringUtils.isBlank(Sign_pub_keyapiUserIDJson) || StringUtils.isBlank(Symmetric_pubkeyapiUserIDJson))
                 throw new ZtgeoBizRuntimeException(CodeMsg.FAIL, "未查询到接收方密钥信息");
             //重新加密加签
@@ -151,6 +148,8 @@ public class SafeFilter extends ZuulFilter {
             httpEntity.setCurrentTime(Instant.now().getEpochSecond());
             // 封装body
             collection.insertOne(httpEntity);
+            ctx.set(GlobalConstants.RECORD_PRIMARY_KEY, id);
+            ctx.set(GlobalConstants.ACCESS_IP_KEY, accessClientIp);
             final byte[] reqBodyBytes = newbody.getBytes();
             ctx.setRequest(new HttpServletRequestWrapper(request){
                 @Override
