@@ -7,6 +7,7 @@ import java.io.Serializable;
  */
 public class HttpEntity implements Serializable {
 
+    private String ID = "";
     // 发送者真实ID
     private String sendUserID = "";
     // 访问的服务ID
@@ -25,10 +26,10 @@ public class HttpEntity implements Serializable {
     private String method = "";
     // 来源url
     private String sourceUrl = "";
-    // headers
-    private String headers = "";
-    // params，请求参数，get与post等处理方式不同，这里全部用字符串保存
-    private String params = "";
+//    // headers
+//    private String headers = "";
+//    // params，请求参数，get与post等处理方式不同，这里全部用字符串保存
+//    private String params = "";
     // 发送的数据
     private String sendBody = "";
     // 接收的数据
@@ -47,6 +48,14 @@ public class HttpEntity implements Serializable {
     private int minute;
     // second
     private int second;
+
+    public String getID() {
+        return ID;
+    }
+
+    public void setID(String ID) {
+        this.ID = ID;
+    }
 
     public String getContentType() {
         return contentType;
@@ -80,21 +89,21 @@ public class HttpEntity implements Serializable {
         this.sourceUrl = sourceUrl;
     }
 
-    public String getHeaders() {
-        return headers;
-    }
-
-    public void setHeaders(String headers) {
-        this.headers = headers;
-    }
-
-    public String getParams() {
-        return params;
-    }
-
-    public void setParams(String params) {
-        this.params = params;
-    }
+//    public String getHeaders() {
+//        return headers;
+//    }
+//
+//    public void setHeaders(String headers) {
+//        this.headers = headers;
+//    }
+//
+//    public String getParams() {
+//        return params;
+//    }
+//
+//    public void setParams(String params) {
+//        this.params = params;
+//    }
 
     public String getSendBody() {
         return sendBody;

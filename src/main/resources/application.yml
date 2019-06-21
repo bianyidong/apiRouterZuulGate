@@ -28,6 +28,6 @@ zuul:
 customAttributes:
   # 存储用户发送数据的数据库名
   #接口转发的数据库名
-  dbName: "http_db"
+  dbName: "httpGenera_db"
   #通知的数据库名
-  dbNoticeName: "httpNotice_db"
+  dbSafeName: "httpSafe_db"
