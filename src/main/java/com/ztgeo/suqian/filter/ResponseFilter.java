@@ -28,14 +28,13 @@ import org.springframework.util.StreamUtils;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.util.Objects;
-
-import static com.ztgeo.suqian.filter.GeneralFilter.getGeneral;
+import static com.ztgeo.suqian.filter.SafefromSignFilter.getSafeBool;
 
 /**
  * 响应过滤器
  *
- * @author zoupeidong
- * @version 2018-12-7
+ * @author bianyidong
+ * @version 2019-6-21
  */
 @Component
 public class ResponseFilter extends ZuulFilter {
@@ -61,9 +60,8 @@ public class ResponseFilter extends ZuulFilter {
 
     @Override
     public boolean shouldFilter() {
-        return getGeneral(jdbcTemplate);
+        return getSafeBool(jdbcTemplate,"GeneralFilter");
     }
-
 
 
     @Override
@@ -74,10 +72,10 @@ public class ResponseFilter extends ZuulFilter {
         InputStream inputStreamNew = null;
         try {
             RequestContext ctx = RequestContext.getCurrentContext();
-            String userID=ctx.getRequest().getHeader("form_user");
+            String userID = ctx.getRequest().getHeader("form_user");
             inputStream = ctx.getResponseDataStream();
             String rspBody = ctx.getResponseBody();
-             //获取记录主键ID(来自routing过滤器保存的上下文)
+            //获取记录主键ID(来自routing过滤器保存的上下文)
             Object recordID = ctx.get(GlobalConstants.RECORD_PRIMARY_KEY);
             Object accessClientIp = ctx.get(GlobalConstants.ACCESS_IP_KEY);
             CodecRegistry pojoCodecRegistry = CodecRegistries.fromRegistries(MongoClient.getDefaultCodecRegistry(),
@@ -85,35 +83,35 @@ public class ResponseFilter extends ZuulFilter {
             MongoDatabase mongoDB = mongoClient.getDatabase(dbName).withCodecRegistry(pojoCodecRegistry);
             MongoCollection<HttpEntity> collection = mongoDB.getCollection(userID + "_record", HttpEntity.class);
             if (Objects.equals(null, accessClientIp) || Objects.equals(null, recordID))
-                throw new ZtgeoBizZuulException(CodeMsg.FAIL,"访问者IP或记录ID未获取到");
-            if(!Objects.equals(null,inputStream)){
+                throw new ZtgeoBizZuulException(CodeMsg.FAIL, "访问者IP或记录ID未获取到");
+            if (!Objects.equals(null, inputStream)) {
                 // 获取返回的body
                 ByteArrayOutputStream byteArrayOutputStream = StreamOperateUtils.cloneInputStreamToByteArray(inputStream);
                 inputStreamOld = new ByteArrayInputStream(byteArrayOutputStream.toByteArray()); // 原始流
                 inputStreamNew = new ByteArrayInputStream(byteArrayOutputStream.toByteArray()); // 复制流
                 // 获取返回的body字符串
                 String responseBody = StreamUtils.copyToString(inputStreamOld, StandardCharsets.UTF_8);
-                if (Objects.equals(null, responseBody)){
+                if (Objects.equals(null, responseBody)) {
                     responseBody = "";
-                    throw new ZtgeoBizZuulException(CodeMsg.FAIL,"响应报文未获取到");
+                    throw new ZtgeoBizZuulException(CodeMsg.FAIL, "响应报文未获取到");
                 }
-                log.info("接收到{}返回的数据,正在入库,记录ID:{}", accessClientIp,recordID);
+                log.info("接收到{}返回的数据,正在入库,记录ID:{}", accessClientIp, recordID);
                 BasicDBObject searchDoc = new BasicDBObject().append("iD", recordID);
                 BasicDBObject newDoc = new BasicDBObject("$set",
                         new BasicDBObject().append("receiveBody", responseBody));
                 collection.findOneAndUpdate(searchDoc, newDoc, new FindOneAndUpdateOptions().upsert(true));
                 log.info("入库完成");
                 ctx.setResponseDataStream(inputStreamNew);
-            }else if(!Objects.equals(null,rspBody)){
-             log.info("接收到{}返回的数据,正在入库,记录ID:{}", accessClientIp,recordID);
+            } else if (!Objects.equals(null, rspBody)) {
+                log.info("接收到{}返回的数据,正在入库,记录ID:{}", accessClientIp, recordID);
                 BasicDBObject searchDoc = new BasicDBObject().append("iD", recordID);
                 BasicDBObject newDoc = new BasicDBObject("$set",
                         new BasicDBObject().append("receiveBody", rspBody));
                 collection.findOneAndUpdate(searchDoc, newDoc, new FindOneAndUpdateOptions().upsert(true));
                 log.info("入库完成");
                 ctx.setResponseBody(rspBody);
-            }else {
-           log.info("未接收到{}返回的任何数据,记录ID:{}", accessClientIp,recordID);
+            } else {
+                log.info("未接收到{}返回的任何数据,记录ID:{}", accessClientIp, recordID);
                 BasicDBObject searchDoc = new BasicDBObject().append("iD", recordID);
                 BasicDBObject newDoc = new BasicDBObject("$set",
                         new BasicDBObject().append("receiveBody", "未收到任何返回数据"));
@@ -123,23 +121,11 @@ public class ResponseFilter extends ZuulFilter {
 
             return null;
         } catch (ZuulException z) {
-            throw new ZtgeoBizZuulException(z,"post过滤器异常", z.nStatusCode, z.errorCause);
+            throw new ZtgeoBizZuulException(z, "post过滤器异常", z.nStatusCode, z.errorCause);
         } catch (Exception s) {
-            throw new ZtgeoBizZuulException(s,CodeMsg.FAIL, "内部异常");
+            throw new ZtgeoBizZuulException(s, CodeMsg.FAIL, "内部异常");
         } finally {
-            try {
-                if (!Objects.equals(null, inputStream)) {
-                    inputStream.close();
-                }
-                if (!Objects.equals(null, inputStreamOld)) {
-                    inputStreamOld.close();
-                }
-                if (!Objects.equals(null, inputStreamNew)) {
-                    inputStreamNew.close();
-                }
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+            ResponseSafeToSignFilter.getFindlly(inputStream, inputStreamOld, inputStreamNew);
         }
     }
 }

@@ -35,6 +35,8 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
 
+import static com.ztgeo.suqian.filter.SafefromSignFilter.getSafeBool;
+
 @Component
 public class
 GeneralFilter extends ZuulFilter {
@@ -73,19 +75,8 @@ GeneralFilter extends ZuulFilter {
      */
     @Override
     public boolean shouldFilter() {
-        return getGeneral(jdbcTemplate);
+        return getSafeBool(jdbcTemplate,"GeneralFilter");
 
-    }
-    static boolean getGeneral(JdbcTemplate jdbcTemplate) {
-        RequestContext ctx = RequestContext.getCurrentContext();
-        HttpServletRequest request = ctx.getRequest();
-        String apiID=request.getHeader("api_id");
-        int count = jdbcTemplate.queryForObject("SELECT COUNT(0) from api_user_filter  where api_id='" + apiID + "' and filter_bc='GeneralFilter'",Integer.class);
-        if (count>0){
-            return true;
-        }else {
-            return false;
-        }
     }
 
     @Override

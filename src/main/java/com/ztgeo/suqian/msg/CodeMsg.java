@@ -20,7 +20,7 @@ public enum CodeMsg {
     NOT_FOUNDUSER(405,"访问者没有权限，请开放权限"),
     SIGN_ERROR(406,"验签失败"),
     PARAMS_ERROR(407,"参数错误"),
-    FAIL(500, "平台网关内部错误");
+    FAIL(600, "平台网关内部错误");
 
     private CodeMsg(int statusCode, String message) {
         this.statusCode = statusCode;

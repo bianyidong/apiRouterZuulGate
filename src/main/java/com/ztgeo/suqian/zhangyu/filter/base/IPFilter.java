@@ -28,19 +28,19 @@ public class IPFilter  extends ZuulFilter {
 
     @Override
     public String filterType() {
-        System.out.println("filterType");
+        //System.out.println("filterType");
         return "pre";
     }
 
     @Override
     public int filterOrder() {
-        System.out.println("filterOrder");
+        //System.out.println("filterOrder");
         return -100;
     }
 
     @Override
     public boolean shouldFilter() {
-        System.out.println("shouldFilter");
+       // System.out.println("shouldFilter");
         String ip = "0:0:0:0:0:0:0:";
         if("0:0:0:0:0:0:0:1".equals(ip)){
             return true;
@@ -51,7 +51,7 @@ public class IPFilter  extends ZuulFilter {
 
     @Override
     public Object run() throws ZuulException {
-        System.out.println("run");
+       // System.out.println("run");
         RequestContext ctx= RequestContext.getCurrentContext();
         HttpServletRequest req=ctx.getRequest();
         String ipAddr=this.getIpAddr(req);
