@@ -12,6 +12,12 @@ public enum CodeMsg {
     SDK_DECRYPT_FAIL(304,"解密失败"),
     SDK_PARAM_ERROR(305,"参数异常"),
 
+    /******************张宇-过滤器异常*******************/
+    API_FILTER_ERROR(501,"无法识别请求接口ID，拒绝访问"),
+    AUTHENTICATION_FILTER_ERROR(502,"无法识别身份信息，拒绝访问"),
+    IP_FILTER_ERROR(503, "无法识别请求IP，拒绝访问"),
+    TIME_FILTER_ERROR(504, "非合法时间请求，拒绝访问"),
+
     /******************共享平台异常*******************/
     UNRECOGNIZED_IDENTITY(401, "无法识别身份，拒绝访问"),
     ACCESS_DENY(402, "无访问权限"),
