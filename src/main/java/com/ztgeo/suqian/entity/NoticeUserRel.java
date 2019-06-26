@@ -11,10 +11,9 @@ import java.io.Serializable;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-@Entity
+
 public class NoticeUserRel implements Serializable {
 
-    @Id
     private String rel_id;
     private String type_id;
     private String user_real_id;

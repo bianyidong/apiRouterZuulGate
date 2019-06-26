@@ -12,6 +12,7 @@ import com.ztgeo.suqian.common.GlobalConstants;
 import com.ztgeo.suqian.common.ZtgeoBizZuulException;
 import com.ztgeo.suqian.entity.HttpEntity;
 import com.ztgeo.suqian.msg.CodeMsg;
+import com.ztgeo.suqian.repository.ApiUserFilterRepository;
 import com.ztgeo.suqian.utils.StreamOperateUtils;
 import org.bson.codecs.configuration.CodecRegistries;
 import org.bson.codecs.configuration.CodecRegistry;
@@ -25,10 +26,12 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StreamUtils;
 
+import javax.annotation.Resource;
+import javax.servlet.http.HttpServletRequest;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.util.Objects;
-import static com.ztgeo.suqian.filter.SafefromSignFilter.getSafeBool;
+
 
 /**
  * 响应过滤器
@@ -40,9 +43,9 @@ import static com.ztgeo.suqian.filter.SafefromSignFilter.getSafeBool;
 public class ResponseFilter extends ZuulFilter {
 
     private static Logger log = LoggerFactory.getLogger(ResponseFilter.class);
-
-    @Autowired
-    private JdbcTemplate jdbcTemplate;
+    private String api_id;
+    @Resource
+    private ApiUserFilterRepository apiUserFilterRepository;
     @Autowired
     private MongoClient mongoClient;
     @Value("${customAttributes.dbName}")
@@ -55,12 +58,21 @@ public class ResponseFilter extends ZuulFilter {
 
     @Override
     public int filterOrder() {
-        return 0;
+        return -1;
     }
 
     @Override
     public boolean shouldFilter() {
-        return getSafeBool(jdbcTemplate,"GeneralFilter");
+        String className = this.getClass().getSimpleName();
+        RequestContext ctx = RequestContext.getCurrentContext();
+        HttpServletRequest request = ctx.getRequest();
+        api_id=request.getHeader("api_id");
+        int count = apiUserFilterRepository.countApiUserFiltersByFilterBcEqualsAndApiIdEquals(className,api_id);
+        if (count>0){
+            return true;
+        }else {
+            return false;
+        }
     }
 
 

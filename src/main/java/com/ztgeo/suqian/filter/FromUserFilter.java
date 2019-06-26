@@ -8,6 +8,7 @@ import com.ztgeo.suqian.msg.CodeMsg;
 import com.ztgeo.suqian.repository.ApiUserFilterRepository;
 import com.ztgeo.suqian.repository.UserKeyInfoRepository;
 import org.springframework.cloud.netflix.zuul.filters.support.FilterConstants;
+import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
@@ -20,6 +21,7 @@ import javax.servlet.http.HttpServletRequest;
  *  例外情况：若某机构未在平台注册用户，且平台已经注册用户允许其访问，则不需要验证
  *  （业务情况基本不现实，若要访问平台注册用户则本身也需要注册---姜总讨论）
  */
+
 public class FromUserFilter extends ZuulFilter {
 
     @Resource
@@ -48,8 +50,7 @@ public class FromUserFilter extends ZuulFilter {
         RequestContext requestContext = RequestContext.getCurrentContext();
         HttpServletRequest httpServletRequest = requestContext.getRequest();
         api_id = httpServletRequest.getHeader("api_id");
-
-        int count = apiUserFilterRepository.countApiUserFiltersByFilterBCEqualsAndApiIdEquals(className,api_id);
+        int count = apiUserFilterRepository.countApiUserFiltersByFilterBcEqualsAndApiIdEquals(className,api_id);
 
         if(count == 0){
             return false;

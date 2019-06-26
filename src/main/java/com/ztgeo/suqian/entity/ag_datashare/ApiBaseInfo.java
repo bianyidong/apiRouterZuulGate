@@ -44,6 +44,6 @@ public class ApiBaseInfo implements Serializable {
     private Date crtTime;
     @Column(name = "upd_user_id")
     private String updUserId;
-    @Column(name = "updTime")
-    private Date upd_time;
+    @Column(name = "upd_time")
+    private Date updTime;
 }

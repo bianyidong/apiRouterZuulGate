@@ -5,5 +5,5 @@ import org.springframework.data.repository.CrudRepository;
 
 public interface ApiUserFilterRepository extends CrudRepository<ApiUserFilter,String> {
 
-    int countApiUserFiltersByFilterBCEqualsAndApiIdEquals(String filterBC, String apiId);
+    int countApiUserFiltersByFilterBcEqualsAndApiIdEquals(String filterBC, String apiId);
 }

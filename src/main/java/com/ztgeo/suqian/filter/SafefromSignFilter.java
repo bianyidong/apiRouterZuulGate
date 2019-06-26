@@ -1,28 +1,24 @@
 package com.ztgeo.suqian.filter;
 
-import javax.servlet.ServletInputStream;
+import javax.annotation.Resource;
+
 import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletRequestWrapper;
+
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.mongodb.MongoClient;
-import com.mongodb.client.MongoCollection;
-import com.mongodb.client.MongoDatabase;
-import com.netflix.zuul.http.ServletInputStreamWrapper;
+
 import com.ztgeo.suqian.common.CryptographyOperation;
-import com.ztgeo.suqian.common.GlobalConstants;
 import com.ztgeo.suqian.common.ZtgeoBizRuntimeException;
 import com.ztgeo.suqian.common.ZtgeoBizZuulException;
 import com.ztgeo.suqian.config.RedisOperator;
-import com.ztgeo.suqian.entity.ApiBaseInfo;
-import com.ztgeo.suqian.entity.HttpEntity;
+
 import com.ztgeo.suqian.msg.CodeMsg;
-import com.ztgeo.suqian.utils.HttpUtils;
+import com.ztgeo.suqian.repository.ApiUserFilterRepository;
+
 import org.apache.commons.lang3.StringUtils;
-import org.bson.codecs.configuration.CodecRegistries;
-import org.bson.codecs.configuration.CodecRegistry;
-import org.bson.codecs.pojo.PojoCodecProvider;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import com.netflix.zuul.ZuulFilter;
@@ -31,18 +27,14 @@ import com.netflix.zuul.exception.ZuulException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.netflix.zuul.filters.support.FilterConstants;
-import org.springframework.jdbc.core.BeanPropertyRowMapper;
-import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StreamUtils;
 
-import java.io.IOException;
+
 import java.io.InputStream;
-import java.lang.reflect.Type;
+
 import java.nio.charset.Charset;
-import java.time.Instant;
-import java.time.LocalDateTime;
-import java.util.List;
+
 import java.util.Objects;
 import static com.ztgeo.suqian.common.GlobalConstants.USER_REDIS_SESSION;
 
@@ -55,9 +47,10 @@ public class SafefromSignFilter extends ZuulFilter {
 
     private static Logger log = LoggerFactory.getLogger(SafefromSignFilter.class);
     @Autowired
-    private JdbcTemplate jdbcTemplate;
-    @Autowired
     private RedisOperator redis;
+    private String api_id;
+    @Resource
+    private ApiUserFilterRepository apiUserFilterRepository;
     @Autowired
     private MongoClient mongoClient;
     @Value("${customAttributes.dbSafeName}")
@@ -70,9 +63,9 @@ public class SafefromSignFilter extends ZuulFilter {
             // 获取request
             RequestContext ctx = RequestContext.getCurrentContext();
             HttpServletRequest request = ctx.getRequest();
-            //1.获取heard中的userID和ApiID
+            //1.获取heard中的userID
             String userID=request.getHeader("form_user");
-            //2.获取body中的加密和加签数据并做解密验签
+            //2.获取body中的加密和加签数据并验签
             InputStream in = ctx.getRequest().getInputStream();
             String body = StreamUtils.copyToString(in, Charset.forName("UTF-8"));
             JSONObject jsonObject = JSON.parseObject(body);
@@ -84,15 +77,12 @@ public class SafefromSignFilter extends ZuulFilter {
             String str = redis.get(USER_REDIS_SESSION +":"+userID);
             JSONObject getjsonObject = JSONObject.parseObject(str);
             String Sign_pub_key=getjsonObject.getString("Sign_pub_key");
-
-
             if (StringUtils.isBlank(Sign_pub_key))
                 throw new ZtgeoBizRuntimeException(CodeMsg.FAIL, "未查询到请求方密钥信息");
             // 验证签名
             boolean verifyResult = CryptographyOperation.signatureVerify(Sign_pub_key, data, sign);
             if (Objects.equals(verifyResult, false))
                 throw new ZtgeoBizRuntimeException(CodeMsg.SIGN_ERROR);
-
             return null;
 
            } catch (ZuulException z) {
@@ -105,19 +95,18 @@ public class SafefromSignFilter extends ZuulFilter {
 
     @Override
     public boolean shouldFilter() {
-        return getSafeBool(jdbcTemplate,"SafefromSignFilter");
-    }
-    static boolean getSafeBool(JdbcTemplate jdbcTemplate,String type) {
+        String className = this.getClass().getSimpleName();
         RequestContext ctx = RequestContext.getCurrentContext();
         HttpServletRequest request = ctx.getRequest();
-        String apiID=request.getHeader("api_id");
-        int count = jdbcTemplate.queryForObject("SELECT COUNT(0) from api_user_filter  where api_id='" + apiID + "' and filter_bc='"+type+"'",Integer.class);
+        api_id=request.getHeader("api_id");
+        int count = apiUserFilterRepository.countApiUserFiltersByFilterBcEqualsAndApiIdEquals(className,api_id);
         if (count>0){
             return true;
         }else {
             return false;
         }
     }
+
     @Override
     public int filterOrder() {
         return 0;

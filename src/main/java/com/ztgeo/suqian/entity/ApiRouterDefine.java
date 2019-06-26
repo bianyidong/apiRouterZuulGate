@@ -12,9 +12,9 @@ import java.util.Date;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-@Entity
+
 public class ApiRouterDefine implements Serializable {
-    @Id
+
     private String id;
     private String path;
     private String service_id;

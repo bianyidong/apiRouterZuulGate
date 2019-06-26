@@ -15,9 +15,11 @@ import com.ztgeo.suqian.common.GlobalConstants;
 import com.ztgeo.suqian.common.ZtgeoBizRuntimeException;
 import com.ztgeo.suqian.common.ZtgeoBizZuulException;
 import com.ztgeo.suqian.config.RedisOperator;
-import com.ztgeo.suqian.entity.ApiBaseInfo;
 import com.ztgeo.suqian.entity.HttpEntity;
+import com.ztgeo.suqian.entity.ag_datashare.ApiBaseInfo;
 import com.ztgeo.suqian.msg.CodeMsg;
+import com.ztgeo.suqian.repository.ApiBaseInfoRepository;
+import com.ztgeo.suqian.repository.ApiUserFilterRepository;
 import com.ztgeo.suqian.utils.StreamOperateUtils;
 import org.bson.codecs.configuration.CodecRegistries;
 import org.bson.codecs.configuration.CodecRegistry;
@@ -32,6 +34,8 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StreamUtils;
 
+import javax.annotation.Resource;
+import javax.servlet.http.HttpServletRequest;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -41,7 +45,7 @@ import java.util.List;
 import java.util.Objects;
 
 import static com.ztgeo.suqian.common.GlobalConstants.USER_REDIS_SESSION;
-import static com.ztgeo.suqian.filter.SafefromSignFilter.getSafeBool;
+
 
 /**
  * 响应过滤器
@@ -53,10 +57,13 @@ import static com.ztgeo.suqian.filter.SafefromSignFilter.getSafeBool;
 public class ResponseSafeToDataFilter extends ZuulFilter {
 
     private static Logger log = LoggerFactory.getLogger(ResponseSafeToDataFilter.class);
+    private String api_id;
+    @Resource
+    private ApiUserFilterRepository apiUserFilterRepository;
+    @Resource
+    private ApiBaseInfoRepository apiBaseInfoRepository;
     @Autowired
     private RedisOperator redis;
-    @Autowired
-    private JdbcTemplate jdbcTemplate;
     @Autowired
     private MongoClient mongoClient;
     @Value("${customAttributes.dbSafeName}")
@@ -72,8 +79,17 @@ public class ResponseSafeToDataFilter extends ZuulFilter {
     }
 
     @Override
-    public boolean shouldFilter() {
-        return getSafeBool(jdbcTemplate,"ResponseSafeToDataFilter");
+    public boolean shouldFilter()  {
+        String className = this.getClass().getSimpleName();
+    RequestContext ctx = RequestContext.getCurrentContext();
+    HttpServletRequest request = ctx.getRequest();
+    api_id=request.getHeader("api_id");
+    int count = apiUserFilterRepository.countApiUserFiltersByFilterBcEqualsAndApiIdEquals(className,api_id);
+        if (count>0){
+        return true;
+    }else {
+        return false;
+    }
     }
 
 
@@ -95,9 +111,9 @@ public class ResponseSafeToDataFilter extends ZuulFilter {
 //            String Symmetric_pubkey=getjsonObject.getString("Symmetric_pubkey");
 //            String Sign_pt_secret_key=getjsonObject.getString("Sign_pt_secret_key");
             //获取接收方机构的密钥
-            List<ApiBaseInfo> list = jdbcTemplate.query(" select * FROM api_base_info abi where abi.api_id ='" + apiID + "'",new BeanPropertyRowMapper<>(ApiBaseInfo.class));
+            List<ApiBaseInfo> list =apiBaseInfoRepository.findApiBaseInfosByApiIdEquals(apiID);
             ApiBaseInfo apiBaseInfo=list.get(0);
-            String apiUserID = redis.get(USER_REDIS_SESSION +":"+apiBaseInfo.getApi_owner_id());
+            String apiUserID = redis.get(USER_REDIS_SESSION +":"+apiBaseInfo.getApiOwnerId());
             JSONObject apiUserIDJson  = JSONObject.parseObject(apiUserID);
             String Symmetric_pubkeyapiUserIDJson=apiUserIDJson.getString("Symmetric_pubkey");
 

@@ -45,9 +45,7 @@ public class BaseFilter extends ZuulFilter {
     public Object run() throws ZuulException {
         RequestContext requestContext = RequestContext.getCurrentContext();
         HttpServletRequest httpServletRequest = requestContext.getRequest();
-
         String api_id = httpServletRequest.getHeader("api_id");
-
         // 从数据库中判断是否存在api_id
         if(api_id != null){
             int count = apiBaseInfoRepository.countApiBaseInfosByApiIdEquals(api_id);

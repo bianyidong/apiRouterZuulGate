@@ -8,9 +8,11 @@ import com.netflix.zuul.context.RequestContext;
 import com.netflix.zuul.exception.ZuulException;
 import com.ztgeo.suqian.common.GlobalConstants;
 import com.ztgeo.suqian.common.ZtgeoBizZuulException;
-import com.ztgeo.suqian.entity.ApiBaseInfo;
 import com.ztgeo.suqian.entity.HttpEntity;
+import com.ztgeo.suqian.entity.ag_datashare.ApiBaseInfo;
 import com.ztgeo.suqian.msg.CodeMsg;
+import com.ztgeo.suqian.repository.ApiBaseInfoRepository;
+import com.ztgeo.suqian.repository.ApiUserFilterRepository;
 import com.ztgeo.suqian.utils.HttpUtils;
 import com.ztgeo.suqian.utils.StringUtils;
 import org.bson.codecs.configuration.CodecRegistries;
@@ -26,6 +28,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StreamUtils;
 
+import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.io.InputStream;
@@ -35,14 +38,17 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
 
-import static com.ztgeo.suqian.filter.SafefromSignFilter.getSafeBool;
 
 @Component
 public class
 GeneralFilter extends ZuulFilter {
 
     private static Logger log = LoggerFactory.getLogger(GeneralFilter.class);
-
+    private String api_id;
+    @Resource
+    private ApiUserFilterRepository apiUserFilterRepository;
+    @Resource
+    private ApiBaseInfoRepository apiBaseInfoRepository;
     @Autowired
     private JdbcTemplate jdbcTemplate;
     @Autowired
@@ -66,7 +72,7 @@ GeneralFilter extends ZuulFilter {
      */
     @Override
     public int filterOrder() {
-        return 0;
+        return -1;
     }
 
     /**
@@ -75,7 +81,16 @@ GeneralFilter extends ZuulFilter {
      */
     @Override
     public boolean shouldFilter() {
-        return getSafeBool(jdbcTemplate,"GeneralFilter");
+        String className = this.getClass().getSimpleName();
+        RequestContext ctx = RequestContext.getCurrentContext();
+        HttpServletRequest request = ctx.getRequest();
+        api_id=request.getHeader("api_id");
+        int count = apiUserFilterRepository.countApiUserFiltersByFilterBcEqualsAndApiIdEquals(className,api_id);
+        if (count>0){
+            return true;
+        }else {
+            return false;
+        }
 
     }
 
@@ -87,8 +102,8 @@ GeneralFilter extends ZuulFilter {
             //System.out.println(UUID.randomUUID().toString());
             RequestContext ctx = RequestContext.getCurrentContext();
             HttpServletRequest request = ctx.getRequest();
-            Object routeHost = ctx.get("routeHost");
-            Object requestURI = ctx.get(FilterConstants.REQUEST_URI_KEY);
+            String routeHost = ctx.get("routeHost").toString();
+            String requestURI = ctx.get(FilterConstants.REQUEST_URI_KEY).toString();
             InputStream in = ctx.getRequest().getInputStream();
             String body = StreamUtils.copyToString(in, Charset.forName("UTF-8"));
             //1.获取heard中的userID和ApiID
@@ -98,7 +113,7 @@ GeneralFilter extends ZuulFilter {
             if (Objects.equals(null, routeHost) || Objects.equals(null, requestURI))
                 throw new ZtgeoBizZuulException(CodeMsg.FAIL, "未匹配到路由规则或请求路径获取失败");
             // 查找base_url和path
-            List<ApiBaseInfo> list = jdbcTemplate.query("select * from api_base_info where base_url='" + routeHost + "' and path = '" + requestURI + "'", new BeanPropertyRowMapper<>(ApiBaseInfo.class));
+            List<ApiBaseInfo> list =apiBaseInfoRepository.findApiBaseInfosByBaseUrlEqualsAndPathEquals(routeHost,requestURI);
             //2. 判断api是否存在
             if (!Objects.equals(null, list) && list.size() != 0) {
                //3.相关信息存入到mongodb中,有待完善日志
@@ -113,10 +128,10 @@ GeneralFilter extends ZuulFilter {
                 httpEntity.setID(id);
                 httpEntity.setSendUserID(userID);
                 httpEntity.setApiID(apiID);
-                httpEntity.setApiName(apiBaseInfo.getApi_name());
+                httpEntity.setApiName(apiBaseInfo.getApiName());
                 httpEntity.setApiPath(apiBaseInfo.getPath());
-                httpEntity.setReceiveUserID(apiBaseInfo.getApi_owner_id());
-                httpEntity.setReceiverUserName(apiBaseInfo.getApi_owner_name());
+                httpEntity.setReceiveUserID(apiBaseInfo.getApiOwnerId());
+                httpEntity.setReceiverUserName(apiBaseInfo.getApiOwnerName());
                 httpEntity.setContentType(request.getContentType());
                 httpEntity.setMethod(request.getMethod());
                 String accessClientIp = HttpUtils.getIpAdrress(request);

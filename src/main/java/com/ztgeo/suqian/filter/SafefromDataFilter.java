@@ -3,6 +3,8 @@ package com.ztgeo.suqian.filter;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.mongodb.MongoClient;
+import com.mongodb.client.MongoCollection;
+import com.mongodb.client.MongoDatabase;
 import com.netflix.zuul.ZuulFilter;
 import com.netflix.zuul.context.RequestContext;
 import com.netflix.zuul.exception.ZuulException;
@@ -11,9 +13,14 @@ import com.ztgeo.suqian.common.CryptographyOperation;
 import com.ztgeo.suqian.common.ZtgeoBizRuntimeException;
 import com.ztgeo.suqian.common.ZtgeoBizZuulException;
 import com.ztgeo.suqian.config.RedisOperator;
+import com.ztgeo.suqian.entity.HttpEntity;
 import com.ztgeo.suqian.msg.CodeMsg;
+import com.ztgeo.suqian.repository.ApiUserFilterRepository;
 import com.ztgeo.suqian.utils.HttpUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.bson.codecs.configuration.CodecRegistries;
+import org.bson.codecs.configuration.CodecRegistry;
+import org.bson.codecs.pojo.PojoCodecProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,16 +30,18 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StreamUtils;
 
+import javax.annotation.Resource;
 import javax.servlet.ServletInputStream;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletRequestWrapper;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.Charset;
+import java.util.Map;
 
 
 import static com.ztgeo.suqian.common.GlobalConstants.USER_REDIS_SESSION;
-import static com.ztgeo.suqian.filter.SafefromSignFilter.getSafeBool;
+
 
 
 /**
@@ -42,8 +51,9 @@ import static com.ztgeo.suqian.filter.SafefromSignFilter.getSafeBool;
 public class SafefromDataFilter extends ZuulFilter {
 
     private static Logger log = LoggerFactory.getLogger(SafefromDataFilter.class);
-    @Autowired
-    private JdbcTemplate jdbcTemplate;
+    private String api_id;
+    @Resource
+    private ApiUserFilterRepository apiUserFilterRepository;
     @Autowired
     private RedisOperator redis;
     @Autowired
@@ -59,10 +69,9 @@ public class SafefromDataFilter extends ZuulFilter {
             RequestContext ctx = RequestContext.getCurrentContext();
             HttpServletRequest request = ctx.getRequest();
             log.info("访问者IP:{}", HttpUtils.getIpAdrress(request));
-            //1.获取heard中的userID和ApiID
+            //1.获取heard中的userID
             String userID=request.getHeader("form_user");
-            //String apiID=request.getHeader("api_id");
-            //2.获取body中的加密和加签数据并做解密验签
+            //2.获取body中的加密和加签数据并做解密
             InputStream in = ctx.getRequest().getInputStream();
             String body = StreamUtils.copyToString(in, Charset.forName("UTF-8"));
             JSONObject jsonObject = JSON.parseObject(body);
@@ -70,7 +79,6 @@ public class SafefromDataFilter extends ZuulFilter {
             String sign=jsonObject.get("sign").toString();
             if (StringUtils.isBlank(data) || StringUtils.isBlank(sign))
                 throw new ZtgeoBizZuulException(CodeMsg.PARAMS_ERROR, "未获取到数据或签名");
-
             //获取redis中的key值
             String str = redis.get(USER_REDIS_SESSION +":"+userID);
             JSONObject getjsonObject = JSONObject.parseObject(str);
@@ -80,29 +88,17 @@ public class SafefromDataFilter extends ZuulFilter {
                 throw new ZtgeoBizRuntimeException(CodeMsg.FAIL, "未查询到请求方密钥信息");
             // 解密数据
             String reqDecryptData = CryptographyOperation.aesDecrypt(Symmetric_pubkey, data);
-//            List<ApiBaseInfo> list = jdbcTemplate.query(" select * FROM api_base_info abi where abi.api_id ='" + apiID + "'",new BeanPropertyRowMapper<>(ApiBaseInfo.class));
-//            ApiBaseInfo apiBaseInfo=list.get(0);
-
-//            String apiUserID = redis.get(USER_REDIS_SESSION +":"+apiBaseInfo.getApi_owner_id());
-//            JSONObject apiUserIDJson  = JSONObject.parseObject(apiUserID);
-//            String Symmetric_pubkeyapiUserIDJson=apiUserIDJson.getString("Symmetric_pubkey");
-//            String Sign_pub_keyapiUserIDJson=apiUserIDJson.getString("Sign_pub_key");
-//            if (StringUtils.isBlank(Sign_pub_keyapiUserIDJson) || StringUtils.isBlank(Symmetric_pubkeyapiUserIDJson))
-//                throw new ZtgeoBizRuntimeException(CodeMsg.FAIL, "未查询到接收方密钥信息");
-//            //重新加密加签
-//            String receiveEncryptData = CryptographyOperation.aesEncrypt(Symmetric_pubkeyapiUserIDJson, reqDecryptData);
-//            String receiveSign = CryptographyOperation.generateSign(Sign_pt_secret_key, receiveEncryptData);
             //重新加载到requset中
             jsonObject.put("data",reqDecryptData);
             jsonObject.put("sign",sign);
             String newbody=jsonObject.toString();
-            //System.out.println("newbody:"+newbody);
             //3.相关信息存入到mongodb中,有待完善日志
-//            CodecRegistry pojoCodecRegistry = CodecRegistries.fromRegistries(MongoClient.getDefaultCodecRegistry(),
-//                    CodecRegistries.fromProviders(PojoCodecProvider.builder().automatic(true).build()));
-//            MongoDatabase mongoDB = mongoClient.getDatabase(dbSafeName).withCodecRegistry(pojoCodecRegistry);
-//            MongoCollection<HttpEntity> collection = mongoDB.getCollection(userID + "_record", HttpEntity.class);
-//            //封装参数
+            CodecRegistry pojoCodecRegistry = CodecRegistries.fromRegistries(MongoClient.getDefaultCodecRegistry(),
+                    CodecRegistries.fromProviders(PojoCodecProvider.builder().automatic(true).build()));
+            MongoDatabase mongoDB = mongoClient.getDatabase(dbSafeName).withCodecRegistry(pojoCodecRegistry);
+            MongoCollection<HttpEntity> collection = mongoDB.getCollection(userID + "_record", HttpEntity.class);
+
+          //封装参数
 //            HttpEntity httpEntity = new HttpEntity();
 //            String id= com.ztgeo.suqian.utils.StringUtils.getShortUUID();
 //            httpEntity.setID(id);
@@ -159,7 +155,16 @@ public class SafefromDataFilter extends ZuulFilter {
 
     @Override
     public boolean shouldFilter() {
-        return getSafeBool(jdbcTemplate,"SafefromDataFilter");
+        String className = this.getClass().getSimpleName();
+        RequestContext ctx = RequestContext.getCurrentContext();
+        HttpServletRequest request = ctx.getRequest();
+        api_id=request.getHeader("api_id");
+        int count = apiUserFilterRepository.countApiUserFiltersByFilterBcEqualsAndApiIdEquals(className,api_id);
+        if (count>0){
+            return true;
+        }else {
+            return false;
+        }
     }
     @Override
     public int filterOrder() {

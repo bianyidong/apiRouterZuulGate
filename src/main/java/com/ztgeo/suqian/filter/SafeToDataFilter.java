@@ -11,8 +11,10 @@ import com.ztgeo.suqian.common.CryptographyOperation;
 import com.ztgeo.suqian.common.ZtgeoBizRuntimeException;
 import com.ztgeo.suqian.common.ZtgeoBizZuulException;
 import com.ztgeo.suqian.config.RedisOperator;
-import com.ztgeo.suqian.entity.ApiBaseInfo;
+import com.ztgeo.suqian.entity.ag_datashare.ApiBaseInfo;
 import com.ztgeo.suqian.msg.CodeMsg;
+import com.ztgeo.suqian.repository.ApiBaseInfoRepository;
+import com.ztgeo.suqian.repository.ApiUserFilterRepository;
 import com.ztgeo.suqian.utils.HttpUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -25,6 +27,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StreamUtils;
 
+import javax.annotation.Resource;
 import javax.servlet.ServletInputStream;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletRequestWrapper;
@@ -35,7 +38,7 @@ import java.util.List;
 
 import static com.ztgeo.suqian.common.GlobalConstants.USER_REDIS_SESSION;
 import static com.ztgeo.suqian.filter.SafefromDataFilter.getObject;
-import static com.ztgeo.suqian.filter.SafefromSignFilter.getSafeBool;
+
 
 
 /**
@@ -45,8 +48,11 @@ import static com.ztgeo.suqian.filter.SafefromSignFilter.getSafeBool;
 public class SafeToDataFilter extends ZuulFilter {
 
     private static Logger log = LoggerFactory.getLogger(SafeToDataFilter.class);
-    @Autowired
-    private JdbcTemplate jdbcTemplate;
+    private String api_id;
+    @Resource
+    private ApiUserFilterRepository apiUserFilterRepository;
+    @Resource
+    private ApiBaseInfoRepository apiBaseInfoRepository;
     @Autowired
     private RedisOperator redis;
     @Autowired
@@ -64,7 +70,7 @@ public class SafeToDataFilter extends ZuulFilter {
             log.info("访问者IP:{}", HttpUtils.getIpAdrress(request));
             //1.获取heard中的userID和ApiID
             String apiID=request.getHeader("api_id");
-            //2.获取body中的加密和加签数据并做解密验签
+            //2.获取body中的解密后的数据
             InputStream in = ctx.getRequest().getInputStream();
             String body = StreamUtils.copyToString(in, Charset.forName("UTF-8"));
             JSONObject jsonObject = JSON.parseObject(body);
@@ -72,17 +78,15 @@ public class SafeToDataFilter extends ZuulFilter {
             String sign=jsonObject.get("sign").toString();
             if (StringUtils.isBlank(data) || StringUtils.isBlank(sign))
                 throw new ZtgeoBizZuulException(CodeMsg.PARAMS_ERROR, "未获取到数据或签名");
-            List<ApiBaseInfo> list = jdbcTemplate.query(" select * FROM api_base_info abi where abi.api_id ='" + apiID + "'",new BeanPropertyRowMapper<>(ApiBaseInfo.class));
+            List<ApiBaseInfo> list =apiBaseInfoRepository.findApiBaseInfosByApiIdEquals(apiID);
             ApiBaseInfo apiBaseInfo=list.get(0);
-
-            String apiUserID = redis.get(USER_REDIS_SESSION +":"+apiBaseInfo.getApi_owner_id());
+            String apiUserID = redis.get(USER_REDIS_SESSION +":"+apiBaseInfo.getApiOwnerId());
             JSONObject apiUserIDJson  = JSONObject.parseObject(apiUserID);
             String Symmetric_pubkeyapiUserIDJson=apiUserIDJson.getString("Symmetric_pubkey");
             if (StringUtils.isBlank(Symmetric_pubkeyapiUserIDJson))
                 throw new ZtgeoBizRuntimeException(CodeMsg.FAIL, "未查询到接收方密钥信息");
             //重新加密
             String receiveEncryptData = CryptographyOperation.aesEncrypt(Symmetric_pubkeyapiUserIDJson, data);
-
             //重新加载到requset中
             jsonObject.put("data",receiveEncryptData);
             String newbody=jsonObject.toString();
@@ -130,7 +134,16 @@ public class SafeToDataFilter extends ZuulFilter {
 
     @Override
     public boolean shouldFilter() {
-        return getSafeBool(jdbcTemplate,"SafeToDataFilter");
+        String className = this.getClass().getSimpleName();
+        RequestContext ctx = RequestContext.getCurrentContext();
+        HttpServletRequest request = ctx.getRequest();
+        api_id=request.getHeader("api_id");
+        int count = apiUserFilterRepository.countApiUserFiltersByFilterBcEqualsAndApiIdEquals(className,api_id);
+        if (count>0){
+            return true;
+        }else {
+            return false;
+        }
     }
     @Override
     public int filterOrder() {

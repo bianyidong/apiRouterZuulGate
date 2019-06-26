@@ -12,10 +12,8 @@ import java.util.Date;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-@Entity
 public class NoticeTypeInfo implements Serializable {
 
-    @Id
     private String ID;
     private String type_id;
     private String type_desc;

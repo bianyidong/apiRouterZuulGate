@@ -11,9 +11,7 @@ import java.io.Serializable;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-@Entity
 public class ApiRouterFilter implements Serializable {
-    @Id
     private String id;
     private String filter_name;
     private String filter_bc;

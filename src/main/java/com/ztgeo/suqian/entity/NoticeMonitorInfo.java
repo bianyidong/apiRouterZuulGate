@@ -12,10 +12,9 @@ import java.util.Date;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-@Entity
+
 public class NoticeMonitorInfo implements Serializable {
 
-    @Id
     private String id_;
     private String sender_user_id;
     private Date last_send_time;

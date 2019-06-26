@@ -18,6 +18,7 @@ import com.ztgeo.suqian.config.RedisOperator;
 import com.ztgeo.suqian.entity.ApiBaseInfo;
 import com.ztgeo.suqian.entity.HttpEntity;
 import com.ztgeo.suqian.msg.CodeMsg;
+import com.ztgeo.suqian.repository.ApiUserFilterRepository;
 import com.ztgeo.suqian.utils.StreamOperateUtils;
 import org.bson.codecs.configuration.CodecRegistries;
 import org.bson.codecs.configuration.CodecRegistry;
@@ -32,6 +33,8 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StreamUtils;
 
+import javax.annotation.Resource;
+import javax.servlet.http.HttpServletRequest;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
@@ -40,7 +43,6 @@ import java.util.List;
 import java.util.Objects;
 
 import static com.ztgeo.suqian.common.GlobalConstants.USER_REDIS_SESSION;
-import static com.ztgeo.suqian.filter.SafefromSignFilter.getSafeBool;
 
 /**
  * 响应过滤器
@@ -52,10 +54,11 @@ import static com.ztgeo.suqian.filter.SafefromSignFilter.getSafeBool;
 public class ResponseSafeAgainSignFilter extends ZuulFilter {
 
     private static Logger log = LoggerFactory.getLogger(ResponseSafeAgainSignFilter.class);
+    private String api_id;
+    @Resource
+    private ApiUserFilterRepository apiUserFilterRepository;
     @Autowired
     private RedisOperator redis;
-    @Autowired
-    private JdbcTemplate jdbcTemplate;
     @Autowired
     private MongoClient mongoClient;
     @Value("${customAttributes.dbSafeName}")
@@ -72,7 +75,16 @@ public class ResponseSafeAgainSignFilter extends ZuulFilter {
 
     @Override
     public boolean shouldFilter() {
-        return getSafeBool(jdbcTemplate,"ResponseSafeAgainSignFilter");
+        String className = this.getClass().getSimpleName();
+        RequestContext ctx = RequestContext.getCurrentContext();
+        HttpServletRequest request = ctx.getRequest();
+        api_id=request.getHeader("api_id");
+        int count = apiUserFilterRepository.countApiUserFiltersByFilterBcEqualsAndApiIdEquals(className,api_id);
+        if (count>0){
+            return true;
+        }else {
+            return false;
+        }
     }
 
 

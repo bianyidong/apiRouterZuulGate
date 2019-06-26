@@ -3,6 +3,8 @@ package com.ztgeo.suqian.filter;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.mongodb.MongoClient;
+import com.mongodb.client.MongoCollection;
+import com.mongodb.client.MongoDatabase;
 import com.netflix.zuul.ZuulFilter;
 import com.netflix.zuul.context.RequestContext;
 import com.netflix.zuul.exception.ZuulException;
@@ -12,9 +14,14 @@ import com.ztgeo.suqian.common.ZtgeoBizRuntimeException;
 import com.ztgeo.suqian.common.ZtgeoBizZuulException;
 import com.ztgeo.suqian.config.RedisOperator;
 import com.ztgeo.suqian.entity.ApiBaseInfo;
+import com.ztgeo.suqian.entity.HttpEntity;
 import com.ztgeo.suqian.msg.CodeMsg;
+import com.ztgeo.suqian.repository.ApiUserFilterRepository;
 import com.ztgeo.suqian.utils.HttpUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.bson.codecs.configuration.CodecRegistries;
+import org.bson.codecs.configuration.CodecRegistry;
+import org.bson.codecs.pojo.PojoCodecProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,6 +31,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StreamUtils;
 
+import javax.annotation.Resource;
 import javax.servlet.ServletInputStream;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletRequestWrapper;
@@ -34,7 +42,7 @@ import java.util.List;
 
 import static com.ztgeo.suqian.common.GlobalConstants.USER_REDIS_SESSION;
 import static com.ztgeo.suqian.filter.SafefromDataFilter.getObject;
-import static com.ztgeo.suqian.filter.SafefromSignFilter.getSafeBool;
+
 
 
 /**
@@ -44,8 +52,9 @@ import static com.ztgeo.suqian.filter.SafefromSignFilter.getSafeBool;
 public class SafeToSignFilter extends ZuulFilter {
 
     private static Logger log = LoggerFactory.getLogger(SafeToSignFilter.class);
-    @Autowired
-    private JdbcTemplate jdbcTemplate;
+    private String api_id;
+    @Resource
+    private ApiUserFilterRepository apiUserFilterRepository;
     @Autowired
     private RedisOperator redis;
     @Autowired
@@ -63,7 +72,7 @@ public class SafeToSignFilter extends ZuulFilter {
             log.info("访问者IP:{}", HttpUtils.getIpAdrress(request));
             //1.获取heard中的userID和ApiID
             String userID=request.getHeader("form_user");
-            //2.获取body中的加密和加签数据并做解密验签
+            //2.获取body中的重新加密后的数据
             InputStream in = ctx.getRequest().getInputStream();
             String body = StreamUtils.copyToString(in, Charset.forName("UTF-8"));
             JSONObject jsonObject = JSON.parseObject(body);
@@ -71,7 +80,6 @@ public class SafeToSignFilter extends ZuulFilter {
             String sign=jsonObject.get("sign").toString();
             if (StringUtils.isBlank(data) || StringUtils.isBlank(sign))
                 throw new ZtgeoBizZuulException(CodeMsg.PARAMS_ERROR, "未获取到数据或签名");
-
             //获取redis中的key值
             String str = redis.get(USER_REDIS_SESSION +":"+userID);
             JSONObject getjsonObject = JSONObject.parseObject(str);
@@ -82,12 +90,11 @@ public class SafeToSignFilter extends ZuulFilter {
             //重新加载到requset中
             jsonObject.put("sign",receiveSign);
             String newbody=jsonObject.toString();
-            //System.out.println("newbody:"+newbody);
             //3.相关信息存入到mongodb中,有待完善日志
-//            CodecRegistry pojoCodecRegistry = CodecRegistries.fromRegistries(MongoClient.getDefaultCodecRegistry(),
-//                    CodecRegistries.fromProviders(PojoCodecProvider.builder().automatic(true).build()));
-//            MongoDatabase mongoDB = mongoClient.getDatabase(dbSafeName).withCodecRegistry(pojoCodecRegistry);
-//            MongoCollection<HttpEntity> collection = mongoDB.getCollection(userID + "_record", HttpEntity.class);
+            CodecRegistry pojoCodecRegistry = CodecRegistries.fromRegistries(MongoClient.getDefaultCodecRegistry(),
+                    CodecRegistries.fromProviders(PojoCodecProvider.builder().automatic(true).build()));
+            MongoDatabase mongoDB = mongoClient.getDatabase(dbSafeName).withCodecRegistry(pojoCodecRegistry);
+            MongoCollection<HttpEntity> collection = mongoDB.getCollection(userID + "_record", HttpEntity.class);
 //            //封装参数
 //            HttpEntity httpEntity = new HttpEntity();
 //            String id= com.ztgeo.suqian.utils.StringUtils.getShortUUID();
@@ -126,7 +133,16 @@ public class SafeToSignFilter extends ZuulFilter {
 
     @Override
     public boolean shouldFilter() {
-        return getSafeBool(jdbcTemplate,"SafeToSignFilter");
+        String className = this.getClass().getSimpleName();
+        RequestContext ctx = RequestContext.getCurrentContext();
+        HttpServletRequest request = ctx.getRequest();
+        api_id=request.getHeader("api_id");
+        int count = apiUserFilterRepository.countApiUserFiltersByFilterBcEqualsAndApiIdEquals(className,api_id);
+        if (count>0){
+            return true;
+        }else {
+            return false;
+        }
     }
     @Override
     public int filterOrder() {

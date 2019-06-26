@@ -11,9 +11,9 @@ import java.io.Serializable;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-@Entity
+
 public class ApiUserFilter implements Serializable {
-    @Id
+
     private String id;
     private String user_real_id;
     private String username;

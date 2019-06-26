@@ -12,9 +12,8 @@ import java.util.Date;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-@Entity
+
 public class BlackListIp implements Serializable {
-    @Id
     private String ip_id;
     private Long ip_content;
     private String ip_note;

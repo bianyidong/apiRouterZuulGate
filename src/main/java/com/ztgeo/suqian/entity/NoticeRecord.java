@@ -12,10 +12,9 @@ import java.util.Date;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-@Entity
+
 public class NoticeRecord implements Serializable {
 
-    @Id
     private String record_id;
     private String sender_id;
     private String receiver_id;
