@@ -27,18 +27,13 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.netflix.zuul.filters.support.FilterConstants;
-import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StreamUtils;
-
 import javax.annotation.Resource;
-import javax.servlet.ServletInputStream;
 import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletRequestWrapper;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.Charset;
-import java.util.List;
 
 import static com.ztgeo.suqian.common.GlobalConstants.USER_REDIS_SESSION;
 import static com.ztgeo.suqian.filter.SafefromDataFilter.getObject;
@@ -72,6 +67,7 @@ public class SafeToSignFilter extends ZuulFilter {
             log.info("访问者IP:{}", HttpUtils.getIpAdrress(request));
             //1.获取heard中的userID和ApiID
             String userID=request.getHeader("form_user");
+
             //2.获取body中的重新加密后的数据
             InputStream in = ctx.getRequest().getInputStream();
             String body = StreamUtils.copyToString(in, Charset.forName("UTF-8"));
@@ -80,17 +76,17 @@ public class SafeToSignFilter extends ZuulFilter {
             String sign=jsonObject.get("sign").toString();
             if (StringUtils.isBlank(data) || StringUtils.isBlank(sign))
                 throw new ZtgeoBizZuulException(CodeMsg.PARAMS_ERROR, "未获取到数据或签名");
-            //获取redis中的key值
+
+            //获取redis中的key值即密钥信息
             String str = redis.get(USER_REDIS_SESSION +":"+userID);
             JSONObject getjsonObject = JSONObject.parseObject(str);
             String Sign_pt_secret_key=getjsonObject.getString("Sign_pt_secret_key");
-
-            //重新加签
+            //3.重新加签
              String receiveSign = CryptographyOperation.generateSign(Sign_pt_secret_key, data);
-            //重新加载到requset中
+            //4.重新加载到requset中
             jsonObject.put("sign",receiveSign);
             String newbody=jsonObject.toString();
-            //3.相关信息存入到mongodb中,有待完善日志
+            //5.相关信息存入到mongodb中,有待完善日志
             CodecRegistry pojoCodecRegistry = CodecRegistries.fromRegistries(MongoClient.getDefaultCodecRegistry(),
                     CodecRegistries.fromProviders(PojoCodecProvider.builder().automatic(true).build()));
             MongoDatabase mongoDB = mongoClient.getDatabase(dbSafeName).withCodecRegistry(pojoCodecRegistry);

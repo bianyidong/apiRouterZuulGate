@@ -7,11 +7,9 @@ import com.ztgeo.suqian.common.ZtgeoBizZuulException;
 import com.ztgeo.suqian.msg.CodeMsg;
 import com.ztgeo.suqian.repository.ApiBaseInfoRepository;
 import org.springframework.cloud.netflix.zuul.filters.support.FilterConstants;
-import org.springframework.context.annotation.FilterType;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
-import java.util.logging.Filter;
 
 /**
  *  基本过滤器 BaseFilter

@@ -25,14 +25,11 @@ public class RouteController {
 
     @Autowired
     ApplicationEventPublisher applicationEventPublisher;
-    private static final Logger log = LoggerFactory.getLogger(RouteController.class);
+//    private static final Logger log = LoggerFactory.getLogger(RouteController.class);
     @Autowired
     RouteLocator routeLocator;
-
-    //@GetMapping("refreshRouteList")
     @Scheduled(fixedRate = 200000)
     public String refreshRouteList(){
-        //log.info("======刷新路由列表完成======");
         RoutesRefreshedEvent routesRefreshedEvent = new RoutesRefreshedEvent(routeLocator);
         applicationEventPublisher.publishEvent(routesRefreshedEvent);
         return ResultMap.ok().toString();

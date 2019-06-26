@@ -14,7 +14,6 @@ public class TimeCheckUtils {
 
         try {
             SimpleDateFormat simpleDateFormat = new SimpleDateFormat("HH:mm:ss");
-
             Date now = simpleDateFormat.parse(simpleDateFormat.format(new Date()));
             Date start = simpleDateFormat.parse(startDate);
             Date end = simpleDateFormat.parse(endDate);
