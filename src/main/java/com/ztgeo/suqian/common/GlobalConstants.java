@@ -14,5 +14,7 @@ public class GlobalConstants {
     public static final String USER_REDIS_SESSION = "user-redis-session";
     // 访问者IP
     public static final String ACCESS_IP_KEY = "accessIP";
+    // 日志
+    public static final String SENDBODY = "";
 
 }

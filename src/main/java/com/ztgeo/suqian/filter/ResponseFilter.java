@@ -74,7 +74,6 @@ public class ResponseFilter extends ZuulFilter {
         }
     }
 
-
     @Override
     public Object run() throws ZuulException {
         log.info("=================进入post通用过滤器,接收返回的数据=====================");
@@ -89,6 +88,7 @@ public class ResponseFilter extends ZuulFilter {
             //获取记录主键ID(来自routing过滤器保存的上下文)
             Object recordID = ctx.get(GlobalConstants.RECORD_PRIMARY_KEY);
             Object accessClientIp = ctx.get(GlobalConstants.ACCESS_IP_KEY);
+
             CodecRegistry pojoCodecRegistry = CodecRegistries.fromRegistries(MongoClient.getDefaultCodecRegistry(),
                     CodecRegistries.fromProviders(PojoCodecProvider.builder().automatic(true).build()));
             MongoDatabase mongoDB = mongoClient.getDatabase(dbName).withCodecRegistry(pojoCodecRegistry);

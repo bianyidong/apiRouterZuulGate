@@ -17,9 +17,12 @@ import com.ztgeo.suqian.common.ZtgeoBizZuulException;
 import com.ztgeo.suqian.config.RedisOperator;
 import com.ztgeo.suqian.entity.ApiBaseInfo;
 import com.ztgeo.suqian.entity.HttpEntity;
+import com.ztgeo.suqian.entity.ag_datashare.UserKeyInfo;
 import com.ztgeo.suqian.msg.CodeMsg;
 import com.ztgeo.suqian.repository.ApiUserFilterRepository;
+import com.ztgeo.suqian.repository.UserKeyInfoRepository;
 import com.ztgeo.suqian.utils.StreamOperateUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.bson.codecs.configuration.CodecRegistries;
 import org.bson.codecs.configuration.CodecRegistry;
 import org.bson.codecs.pojo.PojoCodecProvider;
@@ -37,7 +40,7 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
-import java.util.List;
+
 import java.util.Objects;
 
 import static com.ztgeo.suqian.common.GlobalConstants.USER_REDIS_SESSION;
@@ -53,6 +56,9 @@ public class ResponseSafeAgainSignFilter extends ZuulFilter {
 
     private static Logger log = LoggerFactory.getLogger(ResponseSafeAgainSignFilter.class);
     private String api_id;
+    private String Sign_pt_secret_key;
+    @Resource
+    private UserKeyInfoRepository userKeyInfoRepository;
     @Resource
     private ApiUserFilterRepository apiUserFilterRepository;
     @Autowired
@@ -97,13 +103,26 @@ public class ResponseSafeAgainSignFilter extends ZuulFilter {
             RequestContext ctx = RequestContext.getCurrentContext();
             inputStream = ctx.getResponseDataStream();
             String userID=ctx.getRequest().getHeader("form_user");
-            String apiID=ctx.getRequest().getHeader("api_id");
             //获取redis中userID的key值
             String str = redis.get(USER_REDIS_SESSION +":"+userID);
-            JSONObject getjsonObject = JSONObject.parseObject(str);
-            String Symmetric_pubkey=getjsonObject.getString("Symmetric_pubkey");
-            String Sign_pt_secret_key=getjsonObject.getString("Sign_pt_secret_key");
-
+            if (StringUtils.isBlank(str)){
+                UserKeyInfo userKeyInfo=userKeyInfoRepository.findByUserRealIdEquals(userID);
+                Sign_pt_secret_key=userKeyInfo.getSignPtSecretKey();
+                JSONObject setjsonObject = new JSONObject();
+                setjsonObject.put("Symmetric_pubkey",userKeyInfo.getSymmetricPubkey());
+                setjsonObject.put("Sign_secret_key", userKeyInfo.getSignSecretKey());
+                setjsonObject.put("Sign_pub_key",userKeyInfo.getSignPubKey());
+                setjsonObject.put("Sign_pt_secret_key",userKeyInfo.getSignPtSecretKey());
+                setjsonObject.put("Sign_pt_pub_key",userKeyInfo.getSignPtPubKey());
+                //存入Redis
+                redis.set(USER_REDIS_SESSION +":"+userID, setjsonObject.toJSONString());
+            }else {
+                JSONObject getjsonObject = JSONObject.parseObject(str);
+                Sign_pt_secret_key=getjsonObject.getString("Sign_pt_secret_key");
+                if (StringUtils.isBlank(Sign_pt_secret_key)){
+                    throw new ZtgeoBizRuntimeException(CodeMsg.FAIL, "未查询到请求方密钥信息");
+                }
+            }
 //            CodecRegistry pojoCodecRegistry = CodecRegistries.fromRegistries(MongoClient.getDefaultCodecRegistry(),
 //                    CodecRegistries.fromProviders(PojoCodecProvider.builder().automatic(true).build()));
 //            MongoDatabase mongoDB = mongoClient.getDatabase(dbSafeName).withCodecRegistry(pojoCodecRegistry);

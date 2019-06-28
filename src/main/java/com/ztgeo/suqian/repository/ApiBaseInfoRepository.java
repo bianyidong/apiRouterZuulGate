@@ -9,5 +9,4 @@ public interface ApiBaseInfoRepository extends CrudRepository<ApiBaseInfo,String
 
     int countApiBaseInfosByApiIdEquals(String api_id);
     List<ApiBaseInfo> findApiBaseInfosByApiIdEquals(String api_id);
-    List<ApiBaseInfo> findApiBaseInfosByBaseUrlEqualsAndPathEquals(String routeHost,String requestURI);
 }

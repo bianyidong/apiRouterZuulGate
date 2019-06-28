@@ -17,10 +17,13 @@ import com.ztgeo.suqian.common.ZtgeoBizZuulException;
 import com.ztgeo.suqian.config.RedisOperator;
 import com.ztgeo.suqian.entity.HttpEntity;
 import com.ztgeo.suqian.entity.ag_datashare.ApiBaseInfo;
+import com.ztgeo.suqian.entity.ag_datashare.UserKeyInfo;
 import com.ztgeo.suqian.msg.CodeMsg;
 import com.ztgeo.suqian.repository.ApiBaseInfoRepository;
 import com.ztgeo.suqian.repository.ApiUserFilterRepository;
+import com.ztgeo.suqian.repository.UserKeyInfoRepository;
 import com.ztgeo.suqian.utils.StreamOperateUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.bson.codecs.configuration.CodecRegistries;
 import org.bson.codecs.configuration.CodecRegistry;
 import org.bson.codecs.pojo.PojoCodecProvider;
@@ -56,6 +59,9 @@ public class ResponseSafeToSignFilter extends ZuulFilter {
 
     private static Logger log = LoggerFactory.getLogger(ResponseSafeToSignFilter.class);
     private String api_id;
+    private String Sign_pub_keyapiUserIDJson;
+    @Resource
+    private UserKeyInfoRepository userKeyInfoRepository;
     @Resource
     private ApiUserFilterRepository apiUserFilterRepository;
     @Resource
@@ -106,8 +112,24 @@ public class ResponseSafeToSignFilter extends ZuulFilter {
             List<ApiBaseInfo> list =apiBaseInfoRepository.findApiBaseInfosByApiIdEquals(apiID);
             ApiBaseInfo apiBaseInfo=list.get(0);
             String apiUserID = redis.get(USER_REDIS_SESSION +":"+apiBaseInfo.getApiOwnerId());
-            JSONObject apiUserIDJson  = JSONObject.parseObject(apiUserID);
-            String Sign_pub_keyapiUserIDJson=apiUserIDJson.getString("Sign_pub_key");
+            if (StringUtils.isBlank(apiUserID)){
+                UserKeyInfo userKeyInfo=userKeyInfoRepository.findByUserRealIdEquals(apiBaseInfo.getApiOwnerId());
+                Sign_pub_keyapiUserIDJson=userKeyInfo.getSignPubKey();
+                JSONObject setjsonObject = new JSONObject();
+                setjsonObject.put("Symmetric_pubkey",userKeyInfo.getSymmetricPubkey());
+                setjsonObject.put("Sign_secret_key", userKeyInfo.getSignSecretKey());
+                setjsonObject.put("Sign_pub_key",userKeyInfo.getSignPubKey());
+                setjsonObject.put("Sign_pt_secret_key",userKeyInfo.getSignPtSecretKey());
+                setjsonObject.put("Sign_pt_pub_key",userKeyInfo.getSignPtPubKey());
+                //存入Redis
+                redis.set(USER_REDIS_SESSION +":"+apiBaseInfo.getApiOwnerId(), setjsonObject.toJSONString());
+            }else {
+                JSONObject getjsonObject = JSONObject.parseObject(apiUserID);
+                Sign_pub_keyapiUserIDJson=getjsonObject.getString("Sign_pub_key");
+                if (StringUtils.isBlank(Sign_pub_keyapiUserIDJson)){
+                    throw new ZtgeoBizRuntimeException(CodeMsg.FAIL, "未查询到请求方密钥信息");
+                }
+            }
 
 //            CodecRegistry pojoCodecRegistry = CodecRegistries.fromRegistries(MongoClient.getDefaultCodecRegistry(),
 //                    CodecRegistries.fromProviders(PojoCodecProvider.builder().automatic(true).build()));
@@ -129,11 +151,6 @@ public class ResponseSafeToSignFilter extends ZuulFilter {
                 boolean rspVerifyResult = CryptographyOperation.signatureVerify(Sign_pub_keyapiUserIDJson, data, sign);
                 if (Objects.equals(rspVerifyResult, false))
                     throw new ZtgeoBizRuntimeException(CodeMsg.SIGN_ERROR);
-//                // 解密
-//                String rspDecryptData = CryptographyOperation.aesDecrypt(Symmetric_pubkeyapiUserIDJson, data);
-//                // 重新加密加签
-//                data = CryptographyOperation.aesEncrypt(Symmetric_pubkey, rspDecryptData);
-//                sign = CryptographyOperation.generateSign(Sign_pt_secret_key, data);
                 //重新加载到response中
 //                jsonObject.put("data",data);
 //                jsonObject.put("sign",sign);
@@ -163,11 +180,6 @@ public class ResponseSafeToSignFilter extends ZuulFilter {
                 boolean rspVerifyResult = CryptographyOperation.signatureVerify(Sign_pub_keyapiUserIDJson, rspEncryptData, rspSignData);
                 if (Objects.equals(rspVerifyResult, false))
                     throw new ZtgeoBizRuntimeException(CodeMsg.SIGN_ERROR);
-                //               // 解密
-//                String rspDecryptData = CryptographyOperation.aesDecrypt(Symmetric_pubkeyapiUserIDJson, rspEncryptData);
-//                // 重新加密加签
-//                rspEncryptData = CryptographyOperation.aesEncrypt(Symmetric_pubkey, rspDecryptData);
-//                rspSignData = CryptographyOperation.generateSign(Sign_pt_secret_key, rspEncryptData);
 //                jsonresponseBody.put("data",rspEncryptData);
 //                jsonresponseBody.put("sign",rspSignData);
 //                String newbody=jsonresponseBody.toString();

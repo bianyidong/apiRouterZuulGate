@@ -97,63 +97,12 @@ GeneralFilter extends ZuulFilter {
         InputStream inputStream = null;
         try {
             log.info("=================进入通用转发过滤器=====================");
-            //System.out.println(UUID.randomUUID().toString());
             RequestContext ctx = RequestContext.getCurrentContext();
-            HttpServletRequest request = ctx.getRequest();
-            String routeHost = ctx.get("routeHost").toString();
-            String requestURI = ctx.get(FilterConstants.REQUEST_URI_KEY).toString();
             InputStream in = ctx.getRequest().getInputStream();
             String body = StreamUtils.copyToString(in, Charset.forName("UTF-8"));
-            //1.获取heard中的userID和ApiID
-            String userID=request.getHeader("form_user");
-            String apiID=request.getHeader("api_id");
+                ctx.set(GlobalConstants.SENDBODY, body);
 
-            if (Objects.equals(null, routeHost) || Objects.equals(null, requestURI))
-                throw new ZtgeoBizZuulException(CodeMsg.FAIL, "未匹配到路由规则或请求路径获取失败");
-            // 查找base_url和path
-            List<ApiBaseInfo> list =apiBaseInfoRepository.findApiBaseInfosByBaseUrlEqualsAndPathEquals(routeHost,requestURI);
-            //2. 判断api是否存在
-            if (!Objects.equals(null, list) && list.size() != 0) {
-               //3.相关信息存入到mongodb中,有待完善日志
-                CodecRegistry pojoCodecRegistry = CodecRegistries.fromRegistries(MongoClient.getDefaultCodecRegistry(),
-                        CodecRegistries.fromProviders(PojoCodecProvider.builder().automatic(true).build()));
-                MongoDatabase mongoDB = mongoClient.getDatabase(dbName).withCodecRegistry(pojoCodecRegistry);
-                MongoCollection<HttpEntity> collection = mongoDB.getCollection(userID + "_record", HttpEntity.class);
-                //封装参数
-                HttpEntity httpEntity = new HttpEntity();
-                ApiBaseInfo apiBaseInfo = list.get(0);
-                String id=StringUtils.getShortUUID();
-                httpEntity.setID(id);
-                httpEntity.setSendUserID(userID);
-                httpEntity.setApiID(apiID);
-                httpEntity.setApiName(apiBaseInfo.getApiName());
-                httpEntity.setApiPath(apiBaseInfo.getPath());
-                httpEntity.setReceiveUserID(apiBaseInfo.getApiOwnerId());
-                httpEntity.setReceiverUserName(apiBaseInfo.getApiOwnerName());
-                httpEntity.setContentType(request.getContentType());
-                httpEntity.setMethod(request.getMethod());
-                String accessClientIp = HttpUtils.getIpAdrress(request);
-                httpEntity.setSourceUrl(accessClientIp);
-                httpEntity.setSendBody(body);
-                LocalDateTime localTime = LocalDateTime.now();
-                httpEntity.setYear(localTime.getYear());
-                httpEntity.setMonth(localTime.getMonthValue());
-                httpEntity.setDay(localTime.getDayOfMonth());
-                httpEntity.setHour(localTime.getHour());
-                httpEntity.setMinute(localTime.getMinute());
-                httpEntity.setSecond(localTime.getSecond());
-                httpEntity.setCurrentTime(Instant.now().getEpochSecond());
-                // 封装body
-                collection.insertOne(httpEntity);
-                ctx.set(GlobalConstants.RECORD_PRIMARY_KEY, id);
-                ctx.set(GlobalConstants.ACCESS_IP_KEY, accessClientIp);
-            } else {
-                log.info("未匹配到注册路由,请求路径:{}", requestURI);
-                throw new ZtgeoBizZuulException(CodeMsg.NOT_FOUND, "未匹配到注册路由,请求路径:" + routeHost + requestURI);
-            }
             return null;
-        } catch (ZuulException z) {
-            throw new ZtgeoBizZuulException(z, z.getMessage(), z.nStatusCode, z.errorCause);
         } catch (Exception s) {
             throw new ZtgeoBizZuulException(s, CodeMsg.FAIL, "通用转发过滤器内部异常");
         } finally {
