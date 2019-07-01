@@ -148,6 +148,7 @@ public class ResponseSafeAgainDataFilter extends ZuulFilter {
 
                 //重新加载到response中
                 jsonObject.put("data",data);
+                jsonObject.put("sign",sign);
                 String newbody=jsonObject.toString();
 //                BasicDBObject searchDoc = new BasicDBObject().append("iD", recordID);
 //                BasicDBObject newDoc = new BasicDBObject("$set",

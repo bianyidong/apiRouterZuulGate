@@ -32,6 +32,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.netflix.zuul.filters.support.FilterConstants;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StreamUtils;
+
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
@@ -39,7 +40,6 @@ import java.io.InputStream;
 import java.nio.charset.Charset;
 
 import static com.ztgeo.suqian.common.GlobalConstants.USER_REDIS_SESSION;
-import static com.ztgeo.suqian.filter.SafefromDataFilter.getObject;
 
 
 
@@ -70,51 +70,50 @@ public class SafeToSignFilter extends ZuulFilter {
             // 获取request
             RequestContext ctx = RequestContext.getCurrentContext();
             HttpServletRequest request = ctx.getRequest();
-            String sendbody=ctx.get(GlobalConstants.SENDBODY).toString();
+            String sendbody = ctx.get(GlobalConstants.SENDBODY).toString();
             log.info("访问者IP:{}", HttpUtils.getIpAdrress(request));
             //1.获取heard中的userID和ApiID
-            String userID=request.getHeader("form_user");
+            String userID = request.getHeader("form_user");
 
             //2.获取body中的重新加密后的数据
             InputStream in = ctx.getRequest().getInputStream();
             String body = StreamUtils.copyToString(in, Charset.forName("UTF-8"));
             JSONObject jsonObject = JSON.parseObject(body);
-            String data=jsonObject.get("data").toString();
-            String sign=jsonObject.get("sign").toString();
+            String data = jsonObject.get("data").toString();
+            String sign = jsonObject.get("sign").toString();
             if (StringUtils.isBlank(data) || StringUtils.isBlank(sign))
                 throw new ZtgeoBizZuulException(CodeMsg.PARAMS_ERROR, "未获取到数据或签名");
             //获取redis中的key值即密钥信息
-            String str = redis.get(USER_REDIS_SESSION +":"+userID);
-            if (StringUtils.isBlank(str)){
-                UserKeyInfo userKeyInfo=userKeyInfoRepository.findByUserRealIdEquals(userID);
-                Sign_pt_secret_key=userKeyInfo.getSignPtSecretKey();
+            String str = redis.get(USER_REDIS_SESSION + ":" + userID);
+            if (StringUtils.isBlank(str)) {
+                UserKeyInfo userKeyInfo = userKeyInfoRepository.findByUserRealIdEquals(userID);
+                Sign_pt_secret_key = userKeyInfo.getSignPtSecretKey();
                 JSONObject setjsonObject = new JSONObject();
-                setjsonObject.put("Symmetric_pubkey",userKeyInfo.getSymmetricPubkey());
+                setjsonObject.put("Symmetric_pubkey", userKeyInfo.getSymmetricPubkey());
                 setjsonObject.put("Sign_secret_key", userKeyInfo.getSignSecretKey());
-                setjsonObject.put("Sign_pub_key",userKeyInfo.getSignPubKey());
-                setjsonObject.put("Sign_pt_secret_key",userKeyInfo.getSignPtSecretKey());
-                setjsonObject.put("Sign_pt_pub_key",userKeyInfo.getSignPtPubKey());
+                setjsonObject.put("Sign_pub_key", userKeyInfo.getSignPubKey());
+                setjsonObject.put("Sign_pt_secret_key", userKeyInfo.getSignPtSecretKey());
+                setjsonObject.put("Sign_pt_pub_key", userKeyInfo.getSignPtPubKey());
                 //存入Redis
-                redis.set(USER_REDIS_SESSION +":"+userID, setjsonObject.toJSONString());
-            }else {
+                redis.set(USER_REDIS_SESSION + ":" + userID, setjsonObject.toJSONString());
+            } else {
                 JSONObject getjsonObject = JSONObject.parseObject(str);
-                Sign_pt_secret_key=getjsonObject.getString("Sign_pt_secret_key");
-                if (StringUtils.isBlank(Sign_pt_secret_key)){
+                Sign_pt_secret_key = getjsonObject.getString("Sign_pt_secret_key");
+                if (StringUtils.isBlank(Sign_pt_secret_key)) {
                     throw new ZtgeoBizRuntimeException(CodeMsg.FAIL, "未查询到请求方密钥信息");
                 }
             }
             //3.重新加签
-             String receiveSign = CryptographyOperation.generateSign(Sign_pt_secret_key, data);
+            String receiveSign = CryptographyOperation.generateSign(Sign_pt_secret_key, data);
             //4.重新加载到requset中
-            jsonObject.put("data",data);
-            jsonObject.put("sign",receiveSign);
-            String newbody=jsonObject.toString();
+            jsonObject.put("data", data);
+            jsonObject.put("sign", receiveSign);
+            String newbody = jsonObject.toString();
             ctx.set(GlobalConstants.SENDBODY, newbody);
-
-            return getObject(ctx, request, newbody);
+            return null;
         } catch (ZuulException z) {
             throw new ZtgeoBizZuulException(z.getMessage(), z.nStatusCode, z.errorCause);
-        } catch (Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
             throw new ZtgeoBizZuulException(CodeMsg.FAIL, "内部异常");
         }
@@ -125,14 +124,15 @@ public class SafeToSignFilter extends ZuulFilter {
         String className = this.getClass().getSimpleName();
         RequestContext ctx = RequestContext.getCurrentContext();
         HttpServletRequest request = ctx.getRequest();
-        api_id=request.getHeader("api_id");
-        int count = apiUserFilterRepository.countApiUserFiltersByFilterBcEqualsAndApiIdEquals(className,api_id);
-        if (count>0){
+        api_id = request.getHeader("api_id");
+        int count = apiUserFilterRepository.countApiUserFiltersByFilterBcEqualsAndApiIdEquals(className, api_id);
+        if (count > 0) {
             return true;
-        }else {
+        } else {
             return false;
         }
     }
+
     @Override
     public int filterOrder() {
         return 4;

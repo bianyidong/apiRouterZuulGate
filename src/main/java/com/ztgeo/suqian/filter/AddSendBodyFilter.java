@@ -8,6 +8,7 @@ import com.mongodb.client.MongoDatabase;
 import com.netflix.zuul.ZuulFilter;
 import com.netflix.zuul.context.RequestContext;
 import com.netflix.zuul.exception.ZuulException;
+import com.netflix.zuul.http.ServletInputStreamWrapper;
 import com.ztgeo.suqian.common.CryptographyOperation;
 import com.ztgeo.suqian.common.GlobalConstants;
 import com.ztgeo.suqian.common.ZtgeoBizRuntimeException;
@@ -34,15 +35,16 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.StreamUtils;
 
 import javax.annotation.Resource;
+import javax.servlet.ServletInputStream;
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletRequestWrapper;
+import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.Charset;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.List;
 
-import static com.ztgeo.suqian.common.GlobalConstants.USER_REDIS_SESSION;
-import static com.ztgeo.suqian.filter.SafefromDataFilter.getObject;
 
 
 /**
@@ -106,13 +108,30 @@ public class AddSendBodyFilter extends ZuulFilter {
             collection.insertOne(httpEntity);
             ctx.set(GlobalConstants.RECORD_PRIMARY_KEY,id);
             ctx.set(GlobalConstants.ACCESS_IP_KEY, accessClientIp);
-            return null;
+            return getObject(ctx,request,sendbody);
         } catch (Exception e){
             e.printStackTrace();
             throw new ZtgeoBizZuulException(CodeMsg.FAIL, "内部异常");
         }
     }
-
+    static Object getObject(RequestContext ctx, HttpServletRequest request, String newbody) {
+        final byte[] reqBodyBytes = newbody.getBytes();
+        ctx.setRequest(new HttpServletRequestWrapper(request){
+            @Override
+            public ServletInputStream getInputStream() throws IOException {
+                return new ServletInputStreamWrapper(reqBodyBytes);
+            }
+            @Override
+            public int getContentLength() {
+                return reqBodyBytes.length;
+            }
+            @Override
+            public long getContentLengthLong() {
+                return reqBodyBytes.length;
+            }
+        });
+        return null;
+    }
     @Override
     public boolean shouldFilter() {
             return true;

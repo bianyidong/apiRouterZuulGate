@@ -158,7 +158,7 @@ public class ResponseSafeToDataFilter extends ZuulFilter {
                 String rspDecryptData = CryptographyOperation.aesDecrypt(Symmetric_pubkeyapiUserIDJson, data);
                 //重新加载到response中
                 jsonObject.put("data",rspDecryptData);
-//                jsonObject.put("sign",sign);
+                jsonObject.put("sign",sign);
                 String newbody=jsonObject.toString();
 //                BasicDBObject searchDoc = new BasicDBObject().append("iD", recordID);
 //                BasicDBObject newDoc = new BasicDBObject("$set",
@@ -186,7 +186,7 @@ public class ResponseSafeToDataFilter extends ZuulFilter {
                 String rspDecryptData = CryptographyOperation.aesDecrypt(Symmetric_pubkeyapiUserIDJson, rspEncryptData);
 
                 jsonresponseBody.put("data",rspDecryptData);
-//                jsonresponseBody.put("sign",rspSignData);
+                jsonresponseBody.put("sign",rspSignData);
                 String newbody=jsonresponseBody.toString();
                 ctx.setResponseBody(newbody);
 //                BasicDBObject searchDoc = new BasicDBObject().append("iD", recordID);

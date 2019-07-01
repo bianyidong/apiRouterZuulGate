@@ -89,10 +89,10 @@ public class ResponseFilter extends ZuulFilter {
             Object recordID = ctx.get(GlobalConstants.RECORD_PRIMARY_KEY);
             Object accessClientIp = ctx.get(GlobalConstants.ACCESS_IP_KEY);
 
-            CodecRegistry pojoCodecRegistry = CodecRegistries.fromRegistries(MongoClient.getDefaultCodecRegistry(),
-                    CodecRegistries.fromProviders(PojoCodecProvider.builder().automatic(true).build()));
-            MongoDatabase mongoDB = mongoClient.getDatabase(dbName).withCodecRegistry(pojoCodecRegistry);
-            MongoCollection<HttpEntity> collection = mongoDB.getCollection(userID + "_record", HttpEntity.class);
+//            CodecRegistry pojoCodecRegistry = CodecRegistries.fromRegistries(MongoClient.getDefaultCodecRegistry(),
+//                    CodecRegistries.fromProviders(PojoCodecProvider.builder().automatic(true).build()));
+//            MongoDatabase mongoDB = mongoClient.getDatabase(dbName).withCodecRegistry(pojoCodecRegistry);
+//            MongoCollection<HttpEntity> collection = mongoDB.getCollection(userID + "_record", HttpEntity.class);
             if (Objects.equals(null, accessClientIp) || Objects.equals(null, recordID))
                 throw new ZtgeoBizZuulException(CodeMsg.FAIL, "访问者IP或记录ID未获取到");
             if (!Objects.equals(null, inputStream)) {
@@ -107,27 +107,24 @@ public class ResponseFilter extends ZuulFilter {
                     throw new ZtgeoBizZuulException(CodeMsg.FAIL, "响应报文未获取到");
                 }
                 log.info("接收到{}返回的数据,正在入库,记录ID:{}", accessClientIp, recordID);
-                BasicDBObject searchDoc = new BasicDBObject().append("iD", recordID);
-                BasicDBObject newDoc = new BasicDBObject("$set",
-                        new BasicDBObject().append("receiveBody", responseBody));
-                collection.findOneAndUpdate(searchDoc, newDoc, new FindOneAndUpdateOptions().upsert(true));
+//                BasicDBObject searchDoc = new BasicDBObject().append("iD", recordID);
+//                BasicDBObject newDoc = new BasicDBObject("$set",
+//                        new BasicDBObject().append("receiveBody", responseBody));
+//                collection.findOneAndUpdate(searchDoc, newDoc, new FindOneAndUpdateOptions().upsert(true));
+                ctx.setResponseBody(responseBody);
                 log.info("入库完成");
                 ctx.setResponseDataStream(inputStreamNew);
             } else if (!Objects.equals(null, rspBody)) {
                 log.info("接收到{}返回的数据,正在入库,记录ID:{}", accessClientIp, recordID);
-                BasicDBObject searchDoc = new BasicDBObject().append("iD", recordID);
-                BasicDBObject newDoc = new BasicDBObject("$set",
-                        new BasicDBObject().append("receiveBody", rspBody));
-                collection.findOneAndUpdate(searchDoc, newDoc, new FindOneAndUpdateOptions().upsert(true));
+//                BasicDBObject searchDoc = new BasicDBObject().append("iD", recordID);
+//                BasicDBObject newDoc = new BasicDBObject("$set",
+//                        new BasicDBObject().append("receiveBody", rspBody));
+//                collection.findOneAndUpdate(searchDoc, newDoc, new FindOneAndUpdateOptions().upsert(true));
                 log.info("入库完成");
                 ctx.setResponseBody(rspBody);
             } else {
                 log.info("未接收到{}返回的任何数据,记录ID:{}", accessClientIp, recordID);
-                BasicDBObject searchDoc = new BasicDBObject().append("iD", recordID);
-                BasicDBObject newDoc = new BasicDBObject("$set",
-                        new BasicDBObject().append("receiveBody", "未收到任何返回数据"));
-                collection.findOneAndUpdate(searchDoc, newDoc, new FindOneAndUpdateOptions().upsert(true));
-                log.info("记录完成");
+
             }
 
             return null;

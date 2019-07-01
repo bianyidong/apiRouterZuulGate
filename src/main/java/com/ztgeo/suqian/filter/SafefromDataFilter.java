@@ -41,7 +41,7 @@ import java.nio.charset.Charset;
 
 
 import static com.ztgeo.suqian.common.GlobalConstants.USER_REDIS_SESSION;
-
+import static com.ztgeo.suqian.filter.AddSendBodyFilter.getObject;
 
 
 /**
@@ -103,12 +103,14 @@ public class SafefromDataFilter extends ZuulFilter {
                     throw new ZtgeoBizRuntimeException(CodeMsg.FAIL, "未查询到请求方密钥信息");
                 }
             }
+
             // 解密数据
             String reqDecryptData = CryptographyOperation.aesDecrypt(Symmetric_pubkey, data);
             //重新加载到requset中
             jsonObject.put("data",reqDecryptData);
             jsonObject.put("sign",sign);
             String newbody=jsonObject.toString();
+
             ctx.set(GlobalConstants.SENDBODY, newbody);
 
             return getObject(ctx, request, newbody);
@@ -120,24 +122,6 @@ public class SafefromDataFilter extends ZuulFilter {
         }
     }
 
-    static Object getObject(RequestContext ctx, HttpServletRequest request, String newbody) {
-        final byte[] reqBodyBytes = newbody.getBytes();
-        ctx.setRequest(new HttpServletRequestWrapper(request){
-            @Override
-            public ServletInputStream getInputStream() throws IOException {
-                return new ServletInputStreamWrapper(reqBodyBytes);
-            }
-            @Override
-            public int getContentLength() {
-                return reqBodyBytes.length;
-            }
-            @Override
-            public long getContentLengthLong() {
-                return reqBodyBytes.length;
-            }
-        });
-        return null;
-    }
 
     @Override
     public boolean shouldFilter() {

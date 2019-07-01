@@ -39,8 +39,7 @@ import java.util.List;
 import java.util.Objects;
 
 import static com.ztgeo.suqian.common.GlobalConstants.USER_REDIS_SESSION;
-import static com.ztgeo.suqian.filter.SafefromDataFilter.getObject;
-
+import static com.ztgeo.suqian.filter.AddSendBodyFilter.getObject;
 
 
 /**
@@ -117,7 +116,6 @@ public class SafeToDataFilter extends ZuulFilter {
             jsonObject.put("sign",sign);
             String newbody=jsonObject.toString();
             ctx.set(GlobalConstants.SENDBODY, newbody);
-
             return getObject(ctx, request, newbody);
         } catch (ZuulException z) {
             throw new ZtgeoBizZuulException(z.getMessage(), z.nStatusCode, z.errorCause);

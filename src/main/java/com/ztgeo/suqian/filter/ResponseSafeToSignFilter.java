@@ -180,10 +180,10 @@ public class ResponseSafeToSignFilter extends ZuulFilter {
                 boolean rspVerifyResult = CryptographyOperation.signatureVerify(Sign_pub_keyapiUserIDJson, rspEncryptData, rspSignData);
                 if (Objects.equals(rspVerifyResult, false))
                     throw new ZtgeoBizRuntimeException(CodeMsg.SIGN_ERROR);
-//                jsonresponseBody.put("data",rspEncryptData);
-//                jsonresponseBody.put("sign",rspSignData);
-//                String newbody=jsonresponseBody.toString();
-//                ctx.setResponseBody(newbody);
+                jsonresponseBody.put("data",rspEncryptData);
+                jsonresponseBody.put("sign",rspSignData);
+                String newbody=jsonresponseBody.toString();
+                ctx.setResponseBody(newbody);
 //                BasicDBObject searchDoc = new BasicDBObject().append("iD", recordID);
 //                BasicDBObject newDoc = new BasicDBObject("$set",
 //                        new BasicDBObject().append("receiveBody", newbody));
