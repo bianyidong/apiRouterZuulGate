@@ -21,6 +21,7 @@ import java.util.List;
  *  2、已设置时间过滤器但未设置访问时间---默认全天访问，放行。
  *  3、已设置时间过滤器且已设置访问时间---规定时间内访问，非法时间内异常处理。
  */
+@Component
 public class TimeFilter extends ZuulFilter {
 
     @Resource

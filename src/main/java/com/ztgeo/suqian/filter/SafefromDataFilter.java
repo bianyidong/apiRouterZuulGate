@@ -14,28 +14,20 @@ import com.ztgeo.suqian.common.GlobalConstants;
 import com.ztgeo.suqian.common.ZtgeoBizRuntimeException;
 import com.ztgeo.suqian.common.ZtgeoBizZuulException;
 import com.ztgeo.suqian.config.RedisOperator;
-import com.ztgeo.suqian.entity.HttpEntity;
 import com.ztgeo.suqian.entity.ag_datashare.UserKeyInfo;
 import com.ztgeo.suqian.msg.CodeMsg;
 import com.ztgeo.suqian.repository.ApiUserFilterRepository;
 import com.ztgeo.suqian.repository.UserKeyInfoRepository;
 import com.ztgeo.suqian.utils.HttpUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.bson.codecs.configuration.CodecRegistries;
-import org.bson.codecs.configuration.CodecRegistry;
-import org.bson.codecs.pojo.PojoCodecProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.netflix.zuul.filters.support.FilterConstants;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StreamUtils;
 import javax.annotation.Resource;
-import javax.servlet.ServletInputStream;
 import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletRequestWrapper;
-import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.Charset;
 
@@ -45,7 +37,7 @@ import static com.ztgeo.suqian.filter.AddSendBodyFilter.getObject;
 
 
 /**
- * 用于鉴权
+ * 用于解密请求方
  */
 @Component
 public class SafefromDataFilter extends ZuulFilter {
@@ -59,10 +51,6 @@ public class SafefromDataFilter extends ZuulFilter {
     private ApiUserFilterRepository apiUserFilterRepository;
     @Autowired
     private RedisOperator redis;
-    @Autowired
-    private MongoClient mongoClient;
-    @Value("${customAttributes.dbSafeName}")
-    private String dbSafeName; // 存储用户发送数据的数据库名
 
     @Override
     public Object run() throws ZuulException {
@@ -113,7 +101,8 @@ public class SafefromDataFilter extends ZuulFilter {
 
             ctx.set(GlobalConstants.SENDBODY, newbody);
 
-            return getObject(ctx, request, newbody);
+           return getObject(ctx, request, newbody);
+
         } catch (ZuulException z) {
             throw new ZtgeoBizZuulException(z.getMessage(), z.nStatusCode, z.errorCause);
         } catch (Exception e){

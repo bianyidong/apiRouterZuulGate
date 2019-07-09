@@ -21,7 +21,7 @@ import javax.servlet.http.HttpServletRequest;
  *  例外情况：若某机构未在平台注册用户，且平台已经注册用户允许其访问，则不需要验证
  *  （业务情况基本不现实，若要访问平台注册用户则本身也需要注册---姜总讨论）
  */
-
+@Component
 public class FromUserFilter extends ZuulFilter {
 
     @Resource

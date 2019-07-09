@@ -31,6 +31,7 @@ import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -98,8 +99,8 @@ GeneralFilter extends ZuulFilter {
         try {
             log.info("=================进入通用转发过滤器=====================");
             RequestContext ctx = RequestContext.getCurrentContext();
-            InputStream in = ctx.getRequest().getInputStream();
-            String body = StreamUtils.copyToString(in, Charset.forName("UTF-8"));
+            inputStream = ctx.getRequest().getInputStream();
+            String body = StreamUtils.copyToString(inputStream, StandardCharsets.UTF_8);
                 ctx.set(GlobalConstants.SENDBODY, body);
 
             return null;

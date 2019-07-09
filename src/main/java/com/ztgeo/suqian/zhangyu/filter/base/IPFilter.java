@@ -19,7 +19,7 @@ import java.util.List;
  * 动态过滤：
  * 1、使用shouldFilter方法进行过滤，比方法中的判断条件来自redis或是数据库中的配置信息
  */
-@Component
+
 public class IPFilter  extends ZuulFilter {
     private Logger logger =  LoggerFactory.getLogger(getClass());
 

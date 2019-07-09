@@ -43,7 +43,7 @@ import static com.ztgeo.suqian.common.GlobalConstants.USER_REDIS_SESSION;
 
 
 /**
- * 用于鉴权
+ * 用于验签请求方
  */
 @Component
 public class SafefromSignFilter extends ZuulFilter {
@@ -57,11 +57,6 @@ public class SafefromSignFilter extends ZuulFilter {
     private UserKeyInfoRepository userKeyInfoRepository;
     @Resource
     private ApiUserFilterRepository apiUserFilterRepository;
-
-    @Autowired
-    private MongoClient mongoClient;
-    @Value("${customAttributes.dbSafeName}")
-    private String dbSafeName; // 存储用户发送数据的数据库名
 
     @Override
     public Object run() throws ZuulException {

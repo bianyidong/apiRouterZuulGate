@@ -14,196 +14,196 @@ import org.springframework.jdbc.core.BeanPropertyRowMapper;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.util.StringUtils;
 
-public class ZtgeoRouteLocator extends SimpleRouteLocator implements RefreshableRouteLocator{
+public class ZtgeoRouteLocator extends SimpleRouteLocator implements RefreshableRouteLocator {
 
-	public final static Logger logger = LoggerFactory.getLogger(ZtgeoRouteLocator.class);
+    public final static Logger logger = LoggerFactory.getLogger(ZtgeoRouteLocator.class);
 
-	private JdbcTemplate jdbcTemplate;
+    private JdbcTemplate jdbcTemplate;
 
-	private ZuulProperties properties;
-	
-	public void setJdbcTemplate(JdbcTemplate jdbcTemplate) {
-		this.jdbcTemplate = jdbcTemplate;
-	}
+    private ZuulProperties properties;
 
-	public ZtgeoRouteLocator(String servletPath, ZuulProperties properties) {
-		super(servletPath, properties);
-		this.properties = properties;
-        logger.info("servletPath:{}", servletPath);  
-	}
+    public void setJdbcTemplate(JdbcTemplate jdbcTemplate) {
+        this.jdbcTemplate = jdbcTemplate;
+    }
 
-	@Override
-	public void refresh() {
-		doRefresh();
-	}
+    public ZtgeoRouteLocator(String servletPath, ZuulProperties properties) {
+        super(servletPath, properties);
+        this.properties = properties;
+        logger.info("servletPath:{}", servletPath);
+    }
 
-	@Override
-	protected Map<String, ZuulRoute> locateRoutes() {
-		LinkedHashMap<String, ZuulRoute> routesMap = new LinkedHashMap<String, ZuulRoute>();
-		// 从application.properties中加载路由信息
-		routesMap.putAll(super.locateRoutes());
-		// 从db中加载路由信息
-		routesMap.putAll(locateRoutesFromDB());
-		// 优化一下配置
-		LinkedHashMap<String, ZuulRoute> values = new LinkedHashMap<>();
-		for (Map.Entry<String, ZuulRoute> entry : routesMap.entrySet()) {
-			String path = entry.getKey();
-			// Prepend with slash if not already present.
-			if (!path.startsWith("/")) {
-				path = "/" + path;
-			}
-			if (StringUtils.hasText(this.properties.getPrefix())) {
-				path = this.properties.getPrefix() + path;
-				if (!path.startsWith("/")) {
-					path = "/" + path;
-				}
-			}
-			values.put(path, entry.getValue());
-		}
+    @Override
+    public void refresh() {
+        doRefresh();
+    }
 
-		return values;
-	}
+    @Override
+    protected Map<String, ZuulRoute> locateRoutes() {
+        LinkedHashMap<String, ZuulRoute> routesMap = new LinkedHashMap<String, ZuulRoute>();
+        // 从application.properties中加载路由信息
+        routesMap.putAll(super.locateRoutes());
+        // 从db中加载路由信息
+        routesMap.putAll(locateRoutesFromDB());
+        // 优化一下配置
+        LinkedHashMap<String, ZuulRoute> values = new LinkedHashMap<>();
+        for (Map.Entry<String, ZuulRoute> entry : routesMap.entrySet()) {
+            String path = entry.getKey();
+            // Prepend with slash if not already present.
+            if (!path.startsWith("/")) {
+                path = "/" + path;
+            }
+            if (StringUtils.hasText(this.properties.getPrefix())) {
+                path = this.properties.getPrefix() + path;
+                if (!path.startsWith("/")) {
+                    path = "/" + path;
+                }
+            }
+            values.put(path, entry.getValue());
+        }
+        return values;
+    }
 
-	/**
-	 * 从数据加载路由信息
-	 */
-	private Map<String, ZuulRoute> locateRoutesFromDB() {
-		Map<String, ZuulRoute> routes = new LinkedHashMap<>();
-		List<ZuulRouteVO> results = jdbcTemplate.query("select * from api_router_define where enabled = true ",
-				new BeanPropertyRowMapper<>(ZuulRouteVO.class));
-		for (ZuulRouteVO result : results) {
-			if (org.apache.commons.lang3.StringUtils.isBlank(result.getPath())
-					|| org.apache.commons.lang3.StringUtils.isBlank(result.getUrl())) {
-				continue;
-			}
-			ZuulRoute zuulRoute = new ZuulRoute();
-			try {
-				org.springframework.beans.BeanUtils.copyProperties(result, zuulRoute);
-			} catch (Exception e) {
-				logger.error("=============load zuul route info from db with error==============", e);
-			}
-			routes.put(zuulRoute.getPath(), zuulRoute);
-		}
-		return routes;
-	}
+    /**
+     * 从数据加载路由信息
+     */
+    private Map<String, ZuulRoute> locateRoutesFromDB() {
+        Map<String, ZuulRoute> routes = new LinkedHashMap<>();
+        List<ZuulRouteVO> results = jdbcTemplate.query("select * from api_router_define where enabled = true ",
+                new BeanPropertyRowMapper<>(ZuulRouteVO.class));
+        for (ZuulRouteVO result : results) {
+            if (org.apache.commons.lang3.StringUtils.isBlank(result.getPath())
+                    || org.apache.commons.lang3.StringUtils.isBlank(result.getUrl())) {
+                continue;
+            }
+            ZuulRoute zuulRoute = new ZuulRoute();
+            try {
+                org.springframework.beans.BeanUtils.copyProperties(result, zuulRoute);
+            } catch (Exception e) {
+                logger.error("=============加载路由出错==============", e);
+            }
+            routes.put(zuulRoute.getPath(), zuulRoute);
+        }
+        return routes;
+    }
 
-	public static class ZuulRouteVO {
+    public static class ZuulRouteVO {
 
-		/**
-		 * The ID of the route (the same as its map key by default).
-		 */
-		private String id;
+        /**
+         * The ID of the route (the same as its map key by default).
+         */
+        private String id;
 
-		/**
-		 * The path (pattern) for the route, e.g. /foo/**.
-		 */
-		private String path;
+        /**
+         * The path (pattern) for the route, e.g. /foo/**.
+         */
+        private String path;
 
-		/**
-		 * The service ID (if any) to map to this route. You can specify a physical URL
-		 * or a service, but not both.
-		 */
-		private String serviceId;
+        /**
+         * The service ID (if any) to map to this route. You can specify a physical URL
+         * or a service, but not both.
+         */
+        private String serviceId;
 
-		/**
-		 * A full physical URL to map to the route. An alternative is to use a service
-		 * ID and service discovery to find the physical address.
-		 */
-		private String url;
+        /**
+         * A full physical URL to map to the route. An alternative is to use a service
+         * ID and service discovery to find the physical address.
+         */
+        private String url;
 
-		/**
-		 * Flag to determine whether the prefix for this route (the path, minus pattern
-		 * patcher) should be stripped before forwarding.
-		 */
-		private boolean stripPrefix = true;
+        /**
+         * Flag to determine whether the prefix for this route (the path, minus pattern
+         * patcher) should be stripped before forwarding.
+         */
+        private boolean stripPrefix = true;
 
-		/**
-		 * Flag to indicate that this route should be retryable (if supported).
-		 * Generally retry requires a service ID and ribbon.
-		 */
-		private Boolean retryable;
+        /**
+         * Flag to indicate that this route should be retryable (if supported).
+         * Generally retry requires a service ID and ribbon.
+         */
+        private Boolean retryable;
 
-		private Boolean enabled;
-		public ZuulRouteVO() {
-		}
+        private Boolean enabled;
 
-		public ZuulRouteVO(String id, String path, String serviceId, String url, boolean stripPrefix, Boolean retryable,Boolean enabled) {
-			this.id = id;
-			this.path = path;
-			this.serviceId = serviceId;
-			this.url = url;
-			this.stripPrefix = stripPrefix;
-			this.retryable = retryable;
-			this.enabled=enabled;
-		}
+        public ZuulRouteVO() {
+        }
 
-		public String getId() {
-			return id;
-		}
+        public ZuulRouteVO(String id, String path, String serviceId, String url, boolean stripPrefix, Boolean retryable, Boolean enabled) {
+            this.id = id;
+            this.path = path;
+            this.serviceId = serviceId;
+            this.url = url;
+            this.stripPrefix = stripPrefix;
+            this.retryable = retryable;
+            this.enabled = enabled;
+        }
 
-		public void setId(String id) {
-			this.id = id;
-		}
+        public String getId() {
+            return id;
+        }
 
-		public String getPath() {
-			return path;
-		}
+        public void setId(String id) {
+            this.id = id;
+        }
 
-		public void setPath(String path) {
-			this.path = path;
-		}
+        public String getPath() {
+            return path;
+        }
 
-		public String getServiceId() {
-			return serviceId;
-		}
+        public void setPath(String path) {
+            this.path = path;
+        }
 
-		public void setServiceId(String serviceId) {
-			this.serviceId = serviceId;
-		}
+        public String getServiceId() {
+            return serviceId;
+        }
 
-		public String getUrl() {
-			return url;
-		}
+        public void setServiceId(String serviceId) {
+            this.serviceId = serviceId;
+        }
 
-		public void setUrl(String url) {
-			this.url = url;
-		}
+        public String getUrl() {
+            return url;
+        }
 
-		public boolean isStripPrefix() {
-			return stripPrefix;
-		}
+        public void setUrl(String url) {
+            this.url = url;
+        }
 
-		public void setStripPrefix(boolean stripPrefix) {
-			this.stripPrefix = stripPrefix;
-		}
+        public boolean isStripPrefix() {
+            return stripPrefix;
+        }
 
-		public Boolean getRetryable() {
-			return retryable;
-		}
+        public void setStripPrefix(boolean stripPrefix) {
+            this.stripPrefix = stripPrefix;
+        }
 
-		public void setRetryable(Boolean retryable) {
-			this.retryable = retryable;
-		}
+        public Boolean getRetryable() {
+            return retryable;
+        }
 
-		public Boolean getEnabled() {
-			return enabled;
-		}
+        public void setRetryable(Boolean retryable) {
+            this.retryable = retryable;
+        }
 
-		public void setEnabled(Boolean enabled) {
-			this.enabled = enabled;
-		}
+        public Boolean getEnabled() {
+            return enabled;
+        }
 
-		@Override
-		public String toString() {
-			return "ZuulRouteVO{" +
-					"id='" + id + '\'' +
-					", path='" + path + '\'' +
-					", serviceId='" + serviceId + '\'' +
-					", url='" + url + '\'' +
-					", stripPrefix=" + stripPrefix +
-					", retryable=" + retryable +
-					'}';
-		}
-	}
+        public void setEnabled(Boolean enabled) {
+            this.enabled = enabled;
+        }
+
+        @Override
+        public String toString() {
+            return "ZuulRouteVO{" +
+                    "id='" + id + '\'' +
+                    ", path='" + path + '\'' +
+                    ", serviceId='" + serviceId + '\'' +
+                    ", url='" + url + '\'' +
+                    ", stripPrefix=" + stripPrefix +
+                    ", retryable=" + retryable +
+                    '}';
+        }
+    }
 
 }

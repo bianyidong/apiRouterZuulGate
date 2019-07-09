@@ -35,10 +35,10 @@ import java.util.Objects;
 
 
 /**
- * 响应过滤器
+ * 响应记录日志过滤器
  *
  * @author bianyidong
- * @version 2019-6-21
+ * @version 2019-6-26
  */
 @Component
 public class ResponseReceiveBodyFilter extends ZuulFilter {
@@ -75,6 +75,7 @@ public class ResponseReceiveBodyFilter extends ZuulFilter {
             RequestContext ctx = RequestContext.getCurrentContext();
             String userID = ctx.getRequest().getHeader("form_user");
             String rspBody = ctx.getResponseBody();
+            log.info("接收到返回的数据{}", rspBody);
             //获取记录主键ID(来自routing过滤器保存的上下文)
             Object recordID = ctx.get(GlobalConstants.RECORD_PRIMARY_KEY);
             Object accessClientIp = ctx.get(GlobalConstants.ACCESS_IP_KEY);
@@ -93,11 +94,12 @@ public class ResponseReceiveBodyFilter extends ZuulFilter {
                 collection.findOneAndUpdate(searchDoc, newDoc, new FindOneAndUpdateOptions().upsert(true));
                 log.info("记录完成");
 
-
             return null;
-        } catch (ZuulException z) {
+        }
+        catch (ZuulException z) {
             throw new ZtgeoBizZuulException(z, "post过滤器异常", z.nStatusCode, z.errorCause);
-        } catch (Exception s) {
+        }
+        catch (Exception s) {
             throw new ZtgeoBizZuulException(s, CodeMsg.FAIL, "内部异常");
         }
     }

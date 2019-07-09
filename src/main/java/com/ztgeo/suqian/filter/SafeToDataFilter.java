@@ -40,10 +40,8 @@ import java.util.Objects;
 
 import static com.ztgeo.suqian.common.GlobalConstants.USER_REDIS_SESSION;
 import static com.ztgeo.suqian.filter.AddSendBodyFilter.getObject;
-
-
 /**
- * 用于鉴权
+ * 用于请求时重新加密
  */
 @Component
 public class SafeToDataFilter extends ZuulFilter {
@@ -59,15 +57,11 @@ public class SafeToDataFilter extends ZuulFilter {
     private UserKeyInfoRepository userKeyInfoRepository;
     @Autowired
     private RedisOperator redis;
-    @Autowired
-    private MongoClient mongoClient;
-    @Value("${customAttributes.dbSafeName}")
-    private String dbSafeName; // 存储用户发送数据的数据库名
 
     @Override
     public Object run() throws ZuulException {
         try {
-            log.info("=================进入安全密钥接收方加密过滤器,=====================");
+            log.info("=================进入安全密钥共享平台重新加密过滤器,=====================");
             // 获取request
             RequestContext ctx = RequestContext.getCurrentContext();
             HttpServletRequest request = ctx.getRequest();
@@ -116,7 +110,7 @@ public class SafeToDataFilter extends ZuulFilter {
             jsonObject.put("sign",sign);
             String newbody=jsonObject.toString();
             ctx.set(GlobalConstants.SENDBODY, newbody);
-            return getObject(ctx, request, newbody);
+           return getObject(ctx, request, newbody);
         } catch (ZuulException z) {
             throw new ZtgeoBizZuulException(z.getMessage(), z.nStatusCode, z.errorCause);
         } catch (Exception e){

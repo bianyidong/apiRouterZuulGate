@@ -9,6 +9,7 @@ import com.ztgeo.suqian.msg.CodeMsg;
 import com.ztgeo.suqian.repository.ApiIpWhitelistFilterRepository;
 import com.ztgeo.suqian.repository.ApiUserFilterRepository;
 import org.springframework.cloud.netflix.zuul.filters.support.FilterConstants;
+import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
@@ -18,6 +19,7 @@ import java.util.List;
  *  IP地址过滤器
  *  注：此过滤器为白名单过滤器，黑名单过滤器想法不成熟，待添加
  */
+@Component
 public class IPFilter extends ZuulFilter {
 
     @Resource

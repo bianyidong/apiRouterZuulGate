@@ -2,11 +2,7 @@ package com.ztgeo.suqian.filter;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
-import com.mongodb.BasicDBObject;
 import com.mongodb.MongoClient;
-import com.mongodb.client.MongoCollection;
-import com.mongodb.client.MongoDatabase;
-import com.mongodb.client.model.FindOneAndUpdateOptions;
 import com.netflix.zuul.ZuulFilter;
 import com.netflix.zuul.context.RequestContext;
 import com.netflix.zuul.exception.ZuulException;
@@ -15,7 +11,6 @@ import com.ztgeo.suqian.common.GlobalConstants;
 import com.ztgeo.suqian.common.ZtgeoBizRuntimeException;
 import com.ztgeo.suqian.common.ZtgeoBizZuulException;
 import com.ztgeo.suqian.config.RedisOperator;
-import com.ztgeo.suqian.entity.HttpEntity;
 import com.ztgeo.suqian.entity.ag_datashare.ApiBaseInfo;
 import com.ztgeo.suqian.entity.ag_datashare.UserKeyInfo;
 import com.ztgeo.suqian.msg.CodeMsg;
@@ -24,9 +19,6 @@ import com.ztgeo.suqian.repository.ApiUserFilterRepository;
 import com.ztgeo.suqian.repository.UserKeyInfoRepository;
 import com.ztgeo.suqian.utils.StreamOperateUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.bson.codecs.configuration.CodecRegistries;
-import org.bson.codecs.configuration.CodecRegistry;
-import org.bson.codecs.pojo.PojoCodecProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -39,7 +31,6 @@ import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
@@ -49,10 +40,10 @@ import static com.ztgeo.suqian.common.GlobalConstants.USER_REDIS_SESSION;
 
 
 /**
- * 响应过滤器
+ * 响应解密过滤器
  *
  * @author bianyidong
- * @version 2019-6-21
+ * @version 2019-6-22
  */
 @Component
 public class ResponseSafeToDataFilter extends ZuulFilter {
@@ -68,10 +59,7 @@ public class ResponseSafeToDataFilter extends ZuulFilter {
     private ApiBaseInfoRepository apiBaseInfoRepository;
     @Autowired
     private RedisOperator redis;
-    @Autowired
-    private MongoClient mongoClient;
-    @Value("${customAttributes.dbSafeName}")
-    private String dbSafeName; // 存储用户发送数据的数据库名
+
     @Override
     public String filterType() {
         return FilterConstants.POST_TYPE;
@@ -83,20 +71,18 @@ public class ResponseSafeToDataFilter extends ZuulFilter {
     }
 
     @Override
-    public boolean shouldFilter()  {
+    public boolean shouldFilter() {
         String className = this.getClass().getSimpleName();
-    RequestContext ctx = RequestContext.getCurrentContext();
-    HttpServletRequest request = ctx.getRequest();
-    api_id=request.getHeader("api_id");
-    int count = apiUserFilterRepository.countApiUserFiltersByFilterBcEqualsAndApiIdEquals(className,api_id);
-        if (count>0){
-        return true;
-    }else {
-        return false;
+        RequestContext ctx = RequestContext.getCurrentContext();
+        HttpServletRequest request = ctx.getRequest();
+        api_id = request.getHeader("api_id");
+        int count = apiUserFilterRepository.countApiUserFiltersByFilterBcEqualsAndApiIdEquals(className, api_id);
+        if (count > 0) {
+            return true;
+        } else {
+            return false;
+        }
     }
-    }
-
-
 
     @Override
     public Object run() throws ZuulException {
@@ -107,103 +93,83 @@ public class ResponseSafeToDataFilter extends ZuulFilter {
         try {
             RequestContext ctx = RequestContext.getCurrentContext();
             inputStream = ctx.getResponseDataStream();
-            String userID=ctx.getRequest().getHeader("form_user");
-            String apiID=ctx.getRequest().getHeader("api_id");
-//            //获取redis中userID的key值
-//            String str = redis.get(USER_REDIS_SESSION +":"+userID);
-//            JSONObject getjsonObject = JSONObject.parseObject(str);
-//            String Symmetric_pubkey=getjsonObject.getString("Symmetric_pubkey");
-//            String Sign_pt_secret_key=getjsonObject.getString("Sign_pt_secret_key");
+            String userID = ctx.getRequest().getHeader("form_user");
+            String apiID = ctx.getRequest().getHeader("api_id");
+            //获取记录主键ID(来自routing过滤器保存的上下文)
+            Object recordID = ctx.get(GlobalConstants.RECORD_PRIMARY_KEY);
+            Object accessClientIp = ctx.get(GlobalConstants.ACCESS_IP_KEY);
+            if (Objects.equals(null, accessClientIp) || Objects.equals(null, recordID))
+                throw new ZtgeoBizZuulException(CodeMsg.FAIL, "访问者IP或记录ID未获取到");
             //获取接收方机构的密钥
-            List<ApiBaseInfo> list =apiBaseInfoRepository.findApiBaseInfosByApiIdEquals(apiID);
-            ApiBaseInfo apiBaseInfo=list.get(0);
-            String apiUserID = redis.get(USER_REDIS_SESSION +":"+apiBaseInfo.getApiOwnerId());
-            if (StringUtils.isBlank(apiUserID)){
-                UserKeyInfo userKeyInfo=userKeyInfoRepository.findByUserRealIdEquals(apiBaseInfo.getApiOwnerId());
-                Symmetric_pubkeyapiUserIDJson=userKeyInfo.getSymmetricPubkey();
+            List<ApiBaseInfo> list = apiBaseInfoRepository.findApiBaseInfosByApiIdEquals(apiID);
+            ApiBaseInfo apiBaseInfo = list.get(0);
+            String apiUserID = redis.get(USER_REDIS_SESSION + ":" + apiBaseInfo.getApiOwnerId());
+            if (StringUtils.isBlank(apiUserID)) {
+                UserKeyInfo userKeyInfo = userKeyInfoRepository.findByUserRealIdEquals(apiBaseInfo.getApiOwnerId());
+                Symmetric_pubkeyapiUserIDJson = userKeyInfo.getSymmetricPubkey();
                 JSONObject setjsonObject = new JSONObject();
-                setjsonObject.put("Symmetric_pubkey",userKeyInfo.getSymmetricPubkey());
+                setjsonObject.put("Symmetric_pubkey", userKeyInfo.getSymmetricPubkey());
                 setjsonObject.put("Sign_secret_key", userKeyInfo.getSignSecretKey());
-                setjsonObject.put("Sign_pub_key",userKeyInfo.getSignPubKey());
-                setjsonObject.put("Sign_pt_secret_key",userKeyInfo.getSignPtSecretKey());
-                setjsonObject.put("Sign_pt_pub_key",userKeyInfo.getSignPtPubKey());
+                setjsonObject.put("Sign_pub_key", userKeyInfo.getSignPubKey());
+                setjsonObject.put("Sign_pt_secret_key", userKeyInfo.getSignPtSecretKey());
+                setjsonObject.put("Sign_pt_pub_key", userKeyInfo.getSignPtPubKey());
                 //存入Redis
-                redis.set(USER_REDIS_SESSION +":"+apiBaseInfo.getApiOwnerId(), setjsonObject.toJSONString());
-            }else {
+                redis.set(USER_REDIS_SESSION + ":" + apiBaseInfo.getApiOwnerId(), setjsonObject.toJSONString());
+            } else {
                 JSONObject getjsonObject = JSONObject.parseObject(apiUserID);
-                Symmetric_pubkeyapiUserIDJson=getjsonObject.getString("Symmetric_pubkey");
-                if (StringUtils.isBlank(Symmetric_pubkeyapiUserIDJson)){
+                Symmetric_pubkeyapiUserIDJson = getjsonObject.getString("Symmetric_pubkey");
+                if (StringUtils.isBlank(Symmetric_pubkeyapiUserIDJson)) {
                     throw new ZtgeoBizRuntimeException(CodeMsg.FAIL, "未查询到请求方密钥信息");
                 }
             }
 
-//            CodecRegistry pojoCodecRegistry = CodecRegistries.fromRegistries(MongoClient.getDefaultCodecRegistry(),
-//                    CodecRegistries.fromProviders(PojoCodecProvider.builder().automatic(true).build()));
-//            MongoDatabase mongoDB = mongoClient.getDatabase(dbSafeName).withCodecRegistry(pojoCodecRegistry);
-//            MongoCollection<HttpEntity> collection = mongoDB.getCollection(userID + "_record", HttpEntity.class);
             String rspBody = ctx.getResponseBody();
-
-            // 获取记录主键ID(来自routing过滤器保存的上下文)
-//            Object recordID = ctx.get(GlobalConstants.RECORD_PRIMARY_KEY);
-//            Object accessClientIp = ctx.get(GlobalConstants.ACCESS_IP_KEY);
-//            if (Objects.equals(null, accessClientIp) || Objects.equals(null, recordID))
-//                throw new ZtgeoBizZuulException(CodeMsg.FAIL,"访问者IP或记录ID未获取到");
-             if(!Objects.equals(null,rspBody)){
-//              log.info("接收到{}返回的数据,正在入库,记录ID:{}", accessClientIp,recordID);
+            if (!Objects.equals(null, rspBody)) {
                 JSONObject jsonObject = JSON.parseObject(rspBody);
-                String data=jsonObject.get("data").toString();
-                String sign=jsonObject.get("sign").toString();
+                String data = jsonObject.get("data").toString();
+                String sign = jsonObject.get("sign").toString();
 
                 // 解密
                 String rspDecryptData = CryptographyOperation.aesDecrypt(Symmetric_pubkeyapiUserIDJson, data);
                 //重新加载到response中
-                jsonObject.put("data",rspDecryptData);
-                jsonObject.put("sign",sign);
-                String newbody=jsonObject.toString();
-//                BasicDBObject searchDoc = new BasicDBObject().append("iD", recordID);
-//                BasicDBObject newDoc = new BasicDBObject("$set",
-//                        new BasicDBObject().append("receiveBody", newbody));
-//                collection.findOneAndUpdate(searchDoc, newDoc, new FindOneAndUpdateOptions().upsert(true));
+                jsonObject.put("data", rspDecryptData);
+                jsonObject.put("sign", sign);
+                String newbody = jsonObject.toString();
                 log.info("入库完成");
                 ctx.setResponseBody(newbody);
-            }else if(!Objects.equals(null,inputStream)){
+            } else if (!Objects.equals(null, inputStream)) {
                 // 获取返回的body
                 ByteArrayOutputStream byteArrayOutputStream = StreamOperateUtils.cloneInputStreamToByteArray(inputStream);
                 inputStreamOld = new ByteArrayInputStream(byteArrayOutputStream.toByteArray()); // 原始流
                 inputStreamNew = new ByteArrayInputStream(byteArrayOutputStream.toByteArray()); // 复制流
                 // 获取返回的body字符串
                 String responseBody = StreamUtils.copyToString(inputStreamOld, StandardCharsets.UTF_8);
-                if (Objects.equals(null, responseBody)){
+                if (Objects.equals(null, responseBody)) {
                     responseBody = "";
-                    throw new ZtgeoBizZuulException(CodeMsg.FAIL,"响应报文未获取到");
+                    throw new ZtgeoBizZuulException(CodeMsg.FAIL, "响应报文未获取到");
                 }
                 JSONObject jsonresponseBody = JSON.parseObject(responseBody);
-                String rspEncryptData=jsonresponseBody.get("data").toString();
-                String rspSignData=jsonresponseBody.get("sign").toString();
-//             log.info("接收到{}返回的数据,正在入库,记录ID:{}", accessClientIp,recordID);
+                String rspEncryptData = jsonresponseBody.get("data").toString();
+                String rspSignData = jsonresponseBody.get("sign").toString();
 
                 // 解密
                 String rspDecryptData = CryptographyOperation.aesDecrypt(Symmetric_pubkeyapiUserIDJson, rspEncryptData);
-
-                jsonresponseBody.put("data",rspDecryptData);
-                jsonresponseBody.put("sign",rspSignData);
-                String newbody=jsonresponseBody.toString();
+                jsonresponseBody.put("data", rspDecryptData);
+                jsonresponseBody.put("sign", rspSignData);
+                String newbody = jsonresponseBody.toString();
                 ctx.setResponseBody(newbody);
-//                BasicDBObject searchDoc = new BasicDBObject().append("iD", recordID);
-//                BasicDBObject newDoc = new BasicDBObject("$set",
-//                        new BasicDBObject().append("receiveBody", newbody));
-//                collection.findOneAndUpdate(searchDoc, newDoc, new FindOneAndUpdateOptions().upsert(true));
                 log.info("入库完成");
                 ctx.setResponseDataStream(inputStreamNew);
-            }else {
-             //log.info("未接收到{}返回的任何数据,记录ID:{}", accessClientIp,recordID);
+            } else {
                 log.info("记录完成");
             }
+            ctx.set(GlobalConstants.RECORD_PRIMARY_KEY,recordID);
+            ctx.set(GlobalConstants.ACCESS_IP_KEY, accessClientIp);
             return null;
         } catch (ZuulException z) {
-            throw new ZtgeoBizZuulException(z,"post过滤器异常", z.nStatusCode, z.errorCause);
+            throw new ZtgeoBizZuulException(z, "post过滤器异常", z.nStatusCode, z.errorCause);
         } catch (Exception s) {
-            throw new ZtgeoBizZuulException(s,CodeMsg.FAIL, "内部异常");
+            throw new ZtgeoBizZuulException(s, CodeMsg.FAIL, "内部异常");
         } finally {
             ResponseSafeToSignFilter.getFindlly(inputStream, inputStreamOld, inputStreamNew);
         }

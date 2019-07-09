@@ -1,6 +1,6 @@
 //package com.ztgeo.suqian.rest;
 //
-//import com.github.wxiaoqi.security.common.util.UUIDUtils;
+//import com.ztgeo.suqian.entity.NoticeBaseInfo;
 //import okhttp3.*;
 //import org.springframework.jdbc.core.JdbcTemplate;
 //import org.springframework.jdbc.core.PreparedStatementSetter;
@@ -31,12 +31,12 @@
 //    /**
 //     *  发送通知
 //     */
-//    @RequestMapping(value = "/ztgeoNotice",method = RequestMethod.GET)
+//    @RequestMapping(value = "/ztgeoNotice",method = RequestMethod.POST)
 //    public String sendNotice(HttpServletRequest request){
 //
 //        // 查询发送者ID和待发送的通知类型
 //        //JSONObject tokenEntityJson = jsonObject.getJSONObject("token");
-//        String userID = request.getParameter("userID");
+//        String userID = request.getHeader("form_user");
 //        String noticeCode = request.getParameter("noticeCode");
 //        String sendStr = request.getParameter("data");
 //        // 查询待发送的http列表
@@ -47,8 +47,8 @@
 //                NoticeBaseInfo noticeBaseInfo = new NoticeBaseInfo();
 //                String noticePath = rs.getString("noticePath");
 //                String userRealId = rs.getString("userRealId");
-//                noticeBaseInfo.setNoticeNote(noticePath);
-//                noticeBaseInfo.setUserRealId(userRealId);
+////                noticeBaseInfo.setNoticeNote(noticePath);
+////                noticeBaseInfo.setUserRealId(userRealId);
 //                System.out.println("通知信息"+noticeBaseInfo);
 //                return noticeBaseInfo;
 //            }
@@ -62,13 +62,13 @@
 //                    .build();
 //            RequestBody requestBody = FormBody.create(MediaType.parse("application/json; charset=utf-8")
 //                    , sendStr);
-//            String url = urlList.get(i).getNoticePath();
+//           // String url = urlList.get(i).getNoticePath();
 //            Request requestHttp = new Request.Builder()
-//                    .url(url)//请求的url
-//                    .post(requestBody)
+////                    .url(url)//请求的url
+////                    .post(requestBody)
 //                    .build();
 //            Call call = okHttpClient.newCall(requestHttp);
-//            String receiverId = urlList.get(0).getUserRealId(); // 接收者ID
+//            //String receiverId = urlList.get(0).getUserRealId(); // 接收者ID
 //            DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 //            call.enqueue(new Callback() {
 //                @Override
@@ -77,10 +77,10 @@
 //                    jdbcTemplate.update("insert into notice_record values(?,?,?,?,?,?)",new PreparedStatementSetter(){
 //                        @Override
 //                        public void setValues(PreparedStatement ps) throws SQLException {
-//                            ps.setString(1,UUIDUtils.generateShortUuid());
+//                           // ps.setString(1,UUIDUtils.generateShortUuid());
 //                            ps.setString(2,userID);
-//                            ps.setString(3,receiverId);
-//                            ps.setString(4,url);
+////                            ps.setString(3,receiverId);
+////                            ps.setString(4,url);
 //                            ps.setInt(5,1);
 //                            ps.setString(6,dateTimeFormatter.format(LocalDateTime.now()));
 //                        }
@@ -91,10 +91,10 @@
 //                    jdbcTemplate.update("insert into notice_record values(?,?,?,?,?,?)",new PreparedStatementSetter(){
 //                        @Override
 //                        public void setValues(PreparedStatement ps) throws SQLException {
-//                            ps.setString(1,UUIDUtils.generateShortUuid());
+//                          //  ps.setString(1,UUIDUtils.generateShortUuid());
 //                            ps.setString(2,userID);
-//                            ps.setString(3,receiverId);
-//                            ps.setString(4,url);
+////                            ps.setString(3,receiverId);
+////                            ps.setString(4,url);
 //                            ps.setInt(5,response.isSuccessful() == true?0:1);
 //                            ps.setString(6,dateTimeFormatter.format(LocalDateTime.now()));
 //                        }
