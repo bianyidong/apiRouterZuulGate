@@ -7,12 +7,13 @@ import lombok.NoArgsConstructor;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
+import java.io.Serializable;
 
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity(name = "api_ip_whitelist_filter")
-public class ApiIpWhitelistFilter {
+public class ApiIpWhitelistFilter implements Serializable {
 
     @Id
     @Column(name = "id")

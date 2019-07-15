@@ -59,7 +59,7 @@ public class SafefromDataFilter extends ZuulFilter {
             // 获取request
             RequestContext ctx = RequestContext.getCurrentContext();
             HttpServletRequest request = ctx.getRequest();
-            String sendbody=ctx.get(GlobalConstants.SENDBODY).toString();
+            //String sendbody=ctx.get(GlobalConstants.SENDBODY).toString();
             log.info("访问者IP:{}", HttpUtils.getIpAdrress(request));
             //1.获取heard中的userID
             String userID=request.getHeader("form_user");

@@ -44,9 +44,6 @@ import java.util.Objects;
 public class ResponseReceiveBodyFilter extends ZuulFilter {
 
     private static Logger log = LoggerFactory.getLogger(ResponseReceiveBodyFilter.class);
-    private String api_id;
-    @Resource
-    private ApiUserFilterRepository apiUserFilterRepository;
     @Autowired
     private MongoClient mongoClient;
     @Value("${customAttributes.httpName}")
@@ -70,7 +67,6 @@ public class ResponseReceiveBodyFilter extends ZuulFilter {
     @Override
     public Object run() throws ZuulException {
         log.info("=================进入post通用过滤器,接收返回的数据=====================");
-
         try {
             RequestContext ctx = RequestContext.getCurrentContext();
             String userID = ctx.getRequest().getHeader("form_user");
