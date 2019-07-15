@@ -29,7 +29,7 @@ import java.util.regex.Pattern;
  *  宜兴地税定制---请求
  */
 @Component
-public class YXLTReq_DZ extends ZuulFilter {
+public class YXLTReqDZFilter extends ZuulFilter {
     private Logger log = LoggerFactory.getLogger(this.getClass());
 
     @Resource

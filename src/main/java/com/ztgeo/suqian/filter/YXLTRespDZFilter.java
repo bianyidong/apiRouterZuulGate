@@ -33,7 +33,7 @@ import java.util.regex.Pattern;
  *  宜兴地税定制---响应
  */
 @Component
-public class YXLTResp_DZ extends ZuulFilter {
+public class YXLTRespDZFilter extends ZuulFilter {
     private Logger log = LoggerFactory.getLogger(this.getClass());
 
     @Resource
