@@ -46,12 +46,12 @@ public class YXLTResp_DZ extends ZuulFilter {
 
     @Override
     public String filterType() {
-        return FilterConstants.PRE_TYPE;
+        return FilterConstants.POST_TYPE;
     }
 
     @Override
     public int filterOrder() {
-        return -97;
+        return -88;
     }
 
     @Override

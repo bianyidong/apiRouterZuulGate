@@ -46,7 +46,7 @@ public class YXLTReq_DZ extends ZuulFilter {
 
     @Override
     public int filterOrder() {
-        return -97;
+        return -88;
     }
 
     @Override
