@@ -13,6 +13,8 @@ public enum CodeMsg {
     SDK_PARAM_ERROR(305,"参数异常"),
 
     /******************张宇-过滤器异常*******************/
+    YXLT_DZ_REQ_ERROR(505,"调用宜兴定制请求过滤器异常！"),
+    YXLT_DZ_RESP_ERROR(505,"调用宜兴定制响应过滤器异常！"),
     API_FILTER_ERROR(501,"无法识别请求接口ID，拒绝访问"),
     AUTHENTICATION_FILTER_ERROR(502,"无法识别身份信息，拒绝访问"),
     IP_FILTER_ERROR(503, "无法识别请求IP，拒绝访问"),

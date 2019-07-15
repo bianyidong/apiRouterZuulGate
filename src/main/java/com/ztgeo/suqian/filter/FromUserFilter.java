@@ -9,6 +9,7 @@ import com.ztgeo.suqian.repository.ApiUserFilterRepository;
 import com.ztgeo.suqian.repository.UserKeyInfoRepository;
 import org.springframework.cloud.netflix.zuul.filters.support.FilterConstants;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
@@ -50,6 +51,7 @@ public class FromUserFilter extends ZuulFilter {
         RequestContext requestContext = RequestContext.getCurrentContext();
         HttpServletRequest httpServletRequest = requestContext.getRequest();
         api_id = httpServletRequest.getHeader("api_id");
+
         int count = apiUserFilterRepository.countApiUserFiltersByFilterBcEqualsAndApiIdEquals(className,api_id);
 
         if(count == 0){

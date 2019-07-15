@@ -6,6 +6,9 @@ import com.netflix.zuul.exception.ZuulException;
 import com.ztgeo.suqian.common.ZtgeoBizZuulException;
 import com.ztgeo.suqian.msg.CodeMsg;
 import com.ztgeo.suqian.repository.ApiBaseInfoRepository;
+import com.ztgeo.suqian.repository.ApiUserFilterRepository;
+import com.ztgeo.suqian.repository.UserKeyInfoRepository;
+import org.apache.commons.lang.StringUtils;
 import org.springframework.cloud.netflix.zuul.filters.support.FilterConstants;
 import org.springframework.stereotype.Component;
 
@@ -22,6 +25,12 @@ import javax.servlet.http.HttpServletRequest;
 @Component
 public class BaseFilter extends ZuulFilter {
 
+    @Resource
+    private ApiUserFilterRepository apiUserFilterRepository;
+    @Resource
+    private UserKeyInfoRepository userKeyInfoRepository;
+    private String api_id;
+    private boolean isConfig = false;
 
     @Resource
     private ApiBaseInfoRepository apiBaseInfoRepository;
@@ -38,7 +47,18 @@ public class BaseFilter extends ZuulFilter {
 
     @Override
     public boolean shouldFilter() {
-        return true;
+        String className = this.getClass().getSimpleName();
+        RequestContext requestContext = RequestContext.getCurrentContext();
+        HttpServletRequest httpServletRequest = requestContext.getRequest();
+        api_id = httpServletRequest.getHeader("api_id");
+        int count = apiUserFilterRepository.countApiUserFiltersByFilterBcEqualsAndApiIdEquals(className,api_id);
+
+        if(count == 0){
+            return false;
+        }else{
+            isConfig = true;
+            return true;
+        }
     }
 
     @Override

@@ -8,12 +8,16 @@ import com.ztgeo.suqian.entity.ag_datashare.ApiIpWhitelistFilter;
 import com.ztgeo.suqian.msg.CodeMsg;
 import com.ztgeo.suqian.repository.ApiIpWhitelistFilterRepository;
 import com.ztgeo.suqian.repository.ApiUserFilterRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.cloud.netflix.zuul.filters.support.FilterConstants;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  *  IP地址过滤器
@@ -21,6 +25,7 @@ import java.util.List;
  */
 @Component
 public class IPFilter extends ZuulFilter {
+    private Logger log = LoggerFactory.getLogger(this.getClass());
 
     @Resource
     private ApiIpWhitelistFilterRepository apiIpWhitelistFilterRepository;
@@ -72,16 +77,13 @@ public class IPFilter extends ZuulFilter {
         List<ApiIpWhitelistFilter> apiIpWhitelistFilterList = apiIpWhitelistFilterRepository.findApiIpWhitelistFiltersByApiIdEquals(api_id);
 
         if(!isConfig){
-            System.out.println("接口未配置IP过滤器！");
+            log.info("接口未配置IP过滤器！");
         }else{
             if(isConfig && apiIpWhitelistFilterList.size() == 0){
-                System.out.println("接口已配置IP过滤器，但是没有配置IP，默认全网IP可访问");
+                log.info("接口已配置IP过滤器，但是没有配置IP，默认全网IP可访问");
             }else{
-                for ( ApiIpWhitelistFilter ipWhitelistFilter:apiIpWhitelistFilterList) {
-                    if(current_ip.equals(ipWhitelistFilter.getIpContent())){
-                        IPFlag = true;
-                        break;
-                    }
+                if(!judgeIPRule(apiIpWhitelistFilterList,current_ip)){
+                    throw new ZtgeoBizZuulException(CodeMsg.IP_FILTER_ERROR);
                 }
 
                 if(!IPFlag){
@@ -90,6 +92,55 @@ public class IPFilter extends ZuulFilter {
             }
         }
         return null;
+    }
+
+    /**
+     *  判断IP是否符合匹配规则
+     */
+    public boolean judgeIPRule(List<ApiIpWhitelistFilter> apiIpWhitelistFilterList,String current_ip){
+        boolean IPBoolean = false;
+
+        String[] ipSplits = current_ip.split("\\.");
+
+        for ( ApiIpWhitelistFilter ipWhitelistFilter:apiIpWhitelistFilterList) {
+
+            String ipConfig = ipWhitelistFilter.getIpContent();
+            int startCount = ipConfig.length() - ipConfig.replace("*", "").length();
+            StringBuffer sb = new StringBuffer();
+
+            switch (startCount) {
+                case 0:
+                    sb.append(current_ip);
+                    break;
+                case 1:
+                    sb.append(ipSplits[0]).append(".").append(ipSplits[1]).append(".").append(ipSplits[2]).append(".*");
+                    break;
+                case 2:
+                    sb.append(ipSplits[0]).append(".").append(ipSplits[1]).append(".*.*");
+                    break;
+                case 3:
+                    sb.append(ipSplits[0]).append(".*.*.*");
+                    break;
+                case 4:
+                    sb.append("*.*.*.*");
+                    break;
+            }
+
+            String ipAfter = sb.toString();
+
+            if ("*.*.*.*".equals(ipAfter)) {
+                IPBoolean = true;
+            } else {
+                Pattern ipPattern = Pattern.compile(ipConfig);
+                Matcher m = ipPattern.matcher(ipAfter);
+                IPBoolean = m.matches();
+            }
+
+            if (IPBoolean) {
+                break;
+            }
+        }
+        return IPBoolean;
     }
 
     /**
