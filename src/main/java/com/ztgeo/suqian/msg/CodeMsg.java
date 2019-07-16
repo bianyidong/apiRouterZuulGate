@@ -32,13 +32,13 @@ public enum CodeMsg {
     FAIL(600, "平台网关内部错误"),
 
     /******************张宇-过滤器异常*******************/
-    YXLT_DZ_REQ_ERROR(505,"调用宜兴定制请求过滤器异常！"),
-    YXLT_DZ_RESP_ERROR(505,"调用宜兴定制响应过滤器异常！"),
     API_FILTER_ERROR(501,"无法识别请求接口ID，拒绝访问"),
     AUTHENTICATION_FILTER_ERROR(502,"无法识别身份信息，拒绝访问"),
     IP_FILTER_ERROR(503, "无法识别请求IP，拒绝访问"),
-    TIME_FILTER_ERROR(504, "非合法时间请求，拒绝访问");
-
+    TIME_FILTER_ERROR(504, "非合法时间请求，拒绝访问"),
+    YXLT_DZ_REQ_ERROR(505,"调用宜兴定制请求过滤器异常！"),
+    YXLT_DZ_RESP_ERROR(506,"调用宜兴定制响应过滤器异常！"),
+    YXLT_DZ_CONTENT_TYPE_METHOD_ERROR(507,"调用宜兴定制过滤器异常！请求方法及请求内容类型错误!");
 
 
     private CodeMsg(int statusCode, String message) {

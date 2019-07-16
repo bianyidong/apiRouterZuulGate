@@ -26,6 +26,20 @@ public class XmlAndJsonUtils {
         }
     }
 
+    public static String json2xml_UpperCase(String jsonStr){
+        try {
+            StringBuffer buffer = new StringBuffer();
+            buffer.append("<?xml version=\"1.0\" encoding=\"utf-8\"?>");
+            JSONObject jObj = JSON.parseObject(jsonStr);
+            jsonToXmlstr_UpperCase(jObj,buffer);
+            return buffer.toString();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return "";
+
+        }
+    }
+
     private static String jsonToXmlstr(JSONObject jObj,StringBuffer buffer ){
         Set<Map.Entry<String, Object>> se = jObj.entrySet();
         for(Iterator<Map.Entry<String, Object>> it = se.iterator(); it.hasNext(); )
@@ -52,6 +66,36 @@ public class XmlAndJsonUtils {
         return buffer.toString();
     }
 
+    private static String jsonToXmlstr_UpperCase(JSONObject jObj,StringBuffer buffer ){
+        Set<Map.Entry<String, Object>> se = jObj.entrySet();
+        for(Iterator<Map.Entry<String, Object>> it = se.iterator(); it.hasNext(); )
+        {
+            Map.Entry<String, Object> en = it.next();
+            if(en.getValue().getClass().getName().equals("com.alibaba.fastjson.JSONObject")){
+                buffer.append("<"+en.getKey().toUpperCase()+">");
+                JSONObject jo = jObj.getJSONObject(en.getKey());
+                jsonToXmlstr_UpperCase(jo,buffer);
+                buffer.append("</"+en.getKey().toUpperCase()+">");
+            }else if(en.getValue().getClass().getName().equals("com.alibaba.fastjson.JSONArray")){
+                JSONArray jarray = jObj.getJSONArray(en.getKey());
+                for (int i = 0; i < jarray.size(); i++) {
+                    buffer.append("<"+en.getKey().toUpperCase()+">");
+                    JSONObject jsonobject =  jarray.getJSONObject(i);
+                    jsonToXmlstr_UpperCase(jsonobject,buffer);
+                    buffer.append("</"+en.getKey().toUpperCase()+">");
+                }
+            }else if(en.getValue().getClass().getName().equals("java.lang.String")){
+                buffer.append("<"+en.getKey().toUpperCase()+">"+en.getValue());
+                buffer.append("</"+en.getKey().toUpperCase()+">");
+            }
+        }
+        return buffer.toString();
+    }
+
+
+
+
+
 
     public static JSONObject xml2json(String xmlStr){
         try {
@@ -59,23 +103,14 @@ public class XmlAndJsonUtils {
             JSONObject json=new JSONObject();
             Element ele = doc.getRootElement();
             dom4j2Json(ele, json);
-            String rootName = doc.getRootElement().getName();
-            JSONObject lastJson = new JSONObject();
-            lastJson.put(rootName,json);
-            return lastJson;
+            return json;
         } catch (DocumentException e) {
             e.printStackTrace();
             throw new RuntimeException("xml文件转换异常！");
         }
     }
 
-    /**
-     * xml转json
-     * @param element
-     * @param json
-     */
     private static void dom4j2Json(Element element, JSONObject json){
-
 
         //如果是属性
         for(Object o:element.attributes()){
@@ -91,7 +126,6 @@ public class XmlAndJsonUtils {
         }
 
         for(Element e:chdEl){//有子元素
-            //System.out.println("fffffffff:" + e);
             if(!e.elements().isEmpty()){//子元素也有子元素
                 JSONObject chdjson=new JSONObject();
                 dom4j2Json(e,chdjson);

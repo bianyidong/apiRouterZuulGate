@@ -1,4 +1,4 @@
-package com.ztgeo.suqian.filter;
+package com.ztgeo.suqian.filter.dz;
 
 import com.netflix.zuul.ZuulFilter;
 import com.netflix.zuul.context.RequestContext;
@@ -6,10 +6,12 @@ import com.netflix.zuul.exception.ZuulException;
 import com.ztgeo.suqian.common.ZtgeoBizZuulException;
 import com.ztgeo.suqian.entity.ag_datashare.ApiChangeType;
 import com.ztgeo.suqian.entity.ag_datashare.ApiIpWhitelistFilter;
+import com.ztgeo.suqian.entity.ag_datashare.DzYixing;
 import com.ztgeo.suqian.msg.CodeMsg;
 import com.ztgeo.suqian.repository.ApiChangeTypeRepository;
 import com.ztgeo.suqian.repository.ApiIpWhitelistFilterRepository;
 import com.ztgeo.suqian.repository.ApiUserFilterRepository;
+import com.ztgeo.suqian.repository.DzYixingRepository;
 import com.ztgeo.suqian.utils.StreamOperateUtils;
 import com.ztgeo.suqian.utils.XmlAndJsonUtils;
 import org.slf4j.Logger;
@@ -17,6 +19,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.cloud.netflix.zuul.filters.support.FilterConstants;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StreamUtils;
+import org.springframework.util.StringUtils;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
@@ -37,12 +40,7 @@ public class YXLTRespDZFilter extends ZuulFilter {
     private Logger log = LoggerFactory.getLogger(this.getClass());
 
     @Resource
-    private ApiChangeTypeRepository apiChangeTypeRepository;
-    @Resource
-    private ApiUserFilterRepository apiUserFilterRepository;
-
-    private String api_id;
-
+    private DzYixingRepository dzYixingRepository;
 
     @Override
     public String filterType() {
@@ -56,14 +54,17 @@ public class YXLTRespDZFilter extends ZuulFilter {
 
     @Override
     public boolean shouldFilter() {
-        String className = this.getClass().getSimpleName();
-        RequestContext requestContext = RequestContext.getCurrentContext();
-        HttpServletRequest httpServletRequest = requestContext.getRequest();
-        api_id = httpServletRequest.getHeader("api_id");
-
-        int count = apiUserFilterRepository.countApiUserFiltersByFilterBcEqualsAndApiIdEquals(className,api_id);
-
-        if(count == 0){
+        /**
+         * 宜兴地税定制过滤器
+         * 因为定制过滤器无APIID与FROMUSER，只能通过定制表中的是否有相同请求来判断是否执行过滤器。
+         */
+        // 获取当前请求
+        RequestContext ctx = RequestContext.getCurrentContext();
+        HttpServletRequest httpServletRequest = ctx.getRequest();
+        // 获取请求方法名及对应的定制配置信息
+        String requestURI = httpServletRequest.getRequestURI();
+        DzYixing dzYixing = dzYixingRepository.findDzYixingsByUrlEquals(requestURI);
+        if(StringUtils.isEmpty(dzYixing)){
             return false;
         }else{
             return true;
@@ -74,27 +75,33 @@ public class YXLTRespDZFilter extends ZuulFilter {
     public Object run() throws ZuulException {
         try {
             RequestContext ctx = RequestContext.getCurrentContext();
+            HttpServletRequest httpServletRequest = ctx.getRequest();
+            String requestURI = httpServletRequest.getRequestURI();
+
             InputStream inputStream = ctx.getResponseDataStream();
             ByteArrayOutputStream byteArrayOutputStream = StreamOperateUtils.cloneInputStreamToByteArray(inputStream);
             String responseBody = StreamUtils.copyToString(new ByteArrayInputStream(byteArrayOutputStream.toByteArray()), StandardCharsets.UTF_8);
-            log.info("宜兴定制原接口响应体：" + responseBody);
+            log.info("响应体：" + responseBody);
 
-            // utf8 -- gbk
-            String xml = XmlAndJsonUtils.json2xml(responseBody);
+            // utf8 -- gbk,字段大写
+            String xml = XmlAndJsonUtils.json2xml_UpperCase(responseBody);
             xml = xml.replaceAll("utf-8","GBK");
             xml = xml.replaceAll("UTF-8","GBK");
 
             // 增加jstl3BizPackage版本号
             xml = xml.replaceAll("<jslt3BizPackage>","<jslt3BizPackage version=\"1.0\">");
-            log.info("宜兴定制转换XML后：" + xml);
+            log.info("转换XML：" + xml);
 
-            String apiId = ctx.getRequest().getHeader("api_id");
-            ApiChangeType apiChangeType = apiChangeTypeRepository.findApiChangeTypesByApiIdEquals(apiId);
-            String fromRespSample = apiChangeType.getFromRespSample();
-            String realRespString = fromRespSample.replaceAll("###",xml);
-            log.info("宜兴定制真实响应：" + realRespString);
+            // 对<>进行转义
+            xml = xml.replaceAll("<","&lt;");
+            xml = xml.replaceAll(">","&gt;");
 
-            ctx.addZuulResponseHeader("Content-Type","text/xml");
+            // 通过请求地址再次将定制实例查询
+            DzYixing dzYixing = dzYixingRepository.findDzYixingsByUrlEquals(requestURI);
+            String soapbodyReq = dzYixing.getSoapbodyReq();
+            String realRespString = soapbodyReq.replaceAll("###",xml);
+            log.info("realResp：" + realRespString);
+
             ctx.setResponseBody(realRespString);
 
         } catch (IOException e) {
