@@ -69,19 +69,19 @@ public class ResponseReceiveBodyFilter extends ZuulFilter {
         log.info("=================进入post通用过滤器,接收返回的数据=====================");
         try {
             RequestContext ctx = RequestContext.getCurrentContext();
-            String userID = ctx.getRequest().getHeader("form_user");
+            String userID = ctx.getRequest().getHeader("from_user");
             String rspBody = ctx.getResponseBody();
             log.info("接收到返回的数据{}", rspBody);
             //获取记录主键ID(来自routing过滤器保存的上下文)
             Object recordID = ctx.get(GlobalConstants.RECORD_PRIMARY_KEY);
             Object accessClientIp = ctx.get(GlobalConstants.ACCESS_IP_KEY);
-
+            if (Objects.equals(null, accessClientIp) || Objects.equals(null, recordID))
+                throw new ZtgeoBizZuulException(CodeMsg.FAIL, "访问者IP或记录ID未获取到");
             CodecRegistry pojoCodecRegistry = CodecRegistries.fromRegistries(MongoClient.getDefaultCodecRegistry(),
                     CodecRegistries.fromProviders(PojoCodecProvider.builder().automatic(true).build()));
             MongoDatabase mongoDB = mongoClient.getDatabase(httpName).withCodecRegistry(pojoCodecRegistry);
             MongoCollection<HttpEntity> collection = mongoDB.getCollection(userID + "_record", HttpEntity.class);
-            if (Objects.equals(null, accessClientIp) || Objects.equals(null, recordID))
-                throw new ZtgeoBizZuulException(CodeMsg.FAIL, "访问者IP或记录ID未获取到");
+
 
                 log.info("未接收到{}返回的任何数据,记录ID:{}", accessClientIp, recordID);
                 BasicDBObject searchDoc = new BasicDBObject().append("iD", recordID);

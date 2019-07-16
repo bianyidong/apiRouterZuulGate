@@ -115,7 +115,7 @@ public class SafeToDataFilter extends ZuulFilter {
             throw new ZtgeoBizZuulException(z.getMessage(), z.nStatusCode, z.errorCause);
         } catch (Exception e){
             e.printStackTrace();
-            throw new ZtgeoBizZuulException(CodeMsg.FAIL, "内部异常");
+            throw new ZtgeoBizZuulException(CodeMsg.TODATA_ERROR);
         }
     }
 

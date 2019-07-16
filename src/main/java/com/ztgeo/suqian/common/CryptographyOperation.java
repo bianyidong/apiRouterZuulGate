@@ -119,7 +119,7 @@ public class CryptographyOperation {
             throw new ZtgeoBizRuntimeException(CodeMsg.SDK_SIGN_GENERATE_FAIL, e.getErrorCause());
         } catch (Exception e) {
             e.printStackTrace();
-            throw new ZtgeoBizRuntimeException(CodeMsg.SDK_INTER_ERROR);
+            throw new ZtgeoBizRuntimeException(CodeMsg.SDK_INTER_ERROR,"验证签名失败");
         }
     }
 

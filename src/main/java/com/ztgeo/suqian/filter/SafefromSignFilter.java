@@ -66,7 +66,7 @@ public class SafefromSignFilter extends ZuulFilter {
             RequestContext ctx = RequestContext.getCurrentContext();
             HttpServletRequest request = ctx.getRequest();
             //1.获取heard中的userID
-            String userID=request.getHeader("form_user");
+            String userID=request.getHeader("from_user");
             //2.获取body中的加密和加签数据并验签
             InputStream in = ctx.getRequest().getInputStream();
             String body = StreamUtils.copyToString(in, Charset.forName("UTF-8"));
@@ -109,7 +109,7 @@ public class SafefromSignFilter extends ZuulFilter {
             throw new ZtgeoBizZuulException(z.getMessage(), z.nStatusCode, z.errorCause);
         } catch (Exception e){
             e.printStackTrace();
-            throw new ZtgeoBizZuulException(CodeMsg.FAIL, "内部异常");
+            throw new ZtgeoBizZuulException(CodeMsg.FROMSIGN_ERROR);
         }
     }
 

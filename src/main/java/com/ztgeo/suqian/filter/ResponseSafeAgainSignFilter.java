@@ -88,7 +88,7 @@ public class ResponseSafeAgainSignFilter extends ZuulFilter {
         try {
             RequestContext ctx = RequestContext.getCurrentContext();
             inputStream = ctx.getResponseDataStream();
-            String userID=ctx.getRequest().getHeader("form_user");
+            String userID=ctx.getRequest().getHeader("from_user");
             //获取记录主键ID(来自routing过滤器保存的上下文)
             Object recordID = ctx.get(GlobalConstants.RECORD_PRIMARY_KEY);
             Object accessClientIp = ctx.get(GlobalConstants.ACCESS_IP_KEY);
@@ -156,7 +156,7 @@ public class ResponseSafeAgainSignFilter extends ZuulFilter {
         } catch (ZuulException z) {
             throw new ZtgeoBizZuulException(z,"post过滤器异常", z.nStatusCode, z.errorCause);
         } catch (Exception s) {
-            throw new ZtgeoBizZuulException(s,CodeMsg.FAIL, "内部异常");
+            throw new ZtgeoBizZuulException(s,CodeMsg.AGARSPSIGN_ERROR, "内部异常");
         } finally {
             ResponseSafeToSignFilter.getFindlly(inputStream, inputStreamOld, inputStreamNew);
         }

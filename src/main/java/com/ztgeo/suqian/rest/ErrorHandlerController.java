@@ -28,8 +28,8 @@ public class ErrorHandlerController implements ErrorController {
         ZuulException zuulException = (ZuulException) RequestContext.getCurrentContext().getThrowable(); // 获取业务异常对象
         Integer statusCode = (Integer) request.getAttribute("javax.servlet.error.status_code"); // 获取request状态码，用于处理404情况
         if (!Objects.equals(null, zuulException)) { // 捕捉业务错误
-            log.error("statusCode:{},message:{},errorCause:{}",zuulException.nStatusCode,"过滤器异常",zuulException.errorCause);
-            return ResultMap.error(zuulException.nStatusCode, "过滤器异常", zuulException.errorCause).toString();
+            log.error("statusCode:{},message:{},errorCause:{}",zuulException.nStatusCode,zuulException,zuulException.errorCause);
+            return ResultMap.error(zuulException.nStatusCode, zuulException.getMessage(), zuulException.errorCause).toString();
         } else if (!Objects.equals(null, statusCode) && Objects.equals(404, statusCode)) { // 处理404
             log.error(CodeMsg.NOT_FOUND.message());
             return ResultMap.error(CodeMsg.NOT_FOUND).toString();

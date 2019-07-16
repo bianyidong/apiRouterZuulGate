@@ -62,7 +62,7 @@ public class SafefromDataFilter extends ZuulFilter {
             //String sendbody=ctx.get(GlobalConstants.SENDBODY).toString();
             log.info("访问者IP:{}", HttpUtils.getIpAdrress(request));
             //1.获取heard中的userID
-            String userID=request.getHeader("form_user");
+            String userID=request.getHeader("from_user");
             //2.获取body中的加密和加签数据并做解密
             InputStream in = ctx.getRequest().getInputStream();
             String body = StreamUtils.copyToString(in, Charset.forName("UTF-8"));
@@ -107,7 +107,7 @@ public class SafefromDataFilter extends ZuulFilter {
             throw new ZtgeoBizZuulException(z.getMessage(), z.nStatusCode, z.errorCause);
         } catch (Exception e){
             e.printStackTrace();
-            throw new ZtgeoBizZuulException(CodeMsg.FAIL, "内部异常");
+            throw new ZtgeoBizZuulException(CodeMsg.FROMDATA_ERROR);
         }
     }
 

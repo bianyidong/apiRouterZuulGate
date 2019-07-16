@@ -164,7 +164,7 @@ public class ResponseSafeToSignFilter extends ZuulFilter {
         } catch (ZuulException z) {
             throw new ZtgeoBizZuulException(z,"post过滤器异常", z.nStatusCode, z.errorCause);
         } catch (Exception s) {
-            throw new ZtgeoBizZuulException(s,CodeMsg.FAIL, "内部异常");
+            throw new ZtgeoBizZuulException(s,CodeMsg.RSPSIGN_ERROR, "内部异常");
         } finally {
             getFindlly(inputStream, inputStreamOld, inputStreamNew);
         }

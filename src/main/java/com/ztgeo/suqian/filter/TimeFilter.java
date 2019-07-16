@@ -16,10 +16,10 @@ import javax.servlet.http.HttpServletRequest;
 import java.util.List;
 
 /**
- *  访问时间过滤器，判断请求是否在指定时间内访问
- *  1、未设置时间过滤器---默认全天访问，放行。
- *  2、已设置时间过滤器但未设置访问时间---默认全天访问，放行。
- *  3、已设置时间过滤器且已设置访问时间---规定时间内访问，非法时间内异常处理。
+ * 访问时间过滤器，判断请求是否在指定时间内访问
+ * 1、未设置时间过滤器---默认全天访问，放行。
+ * 2、已设置时间过滤器但未设置访问时间---默认全天访问，放行。
+ * 3、已设置时间过滤器且已设置访问时间---规定时间内访问，非法时间内异常处理。
  */
 @Component
 public class TimeFilter extends ZuulFilter {
@@ -52,11 +52,11 @@ public class TimeFilter extends ZuulFilter {
         HttpServletRequest httpServletRequest = requestContext.getRequest();
         api_id = httpServletRequest.getHeader("api_id");
 
-        int count = apiUserFilterRepository.countApiUserFiltersByFilterBcEqualsAndApiIdEquals(className,api_id);
+        int count = apiUserFilterRepository.countApiUserFiltersByFilterBcEqualsAndApiIdEquals(className, api_id);
 
-        if(count == 0){
+        if (count == 0) {
             return false;
-        }else{
+        } else {
             isConfig = true;
             return true;
         }
@@ -71,20 +71,18 @@ public class TimeFilter extends ZuulFilter {
 
         //System.out.println(api_id + "\t" + apiTimeFilterList.size() + "\t" + isConfig);
 
-        if(!isConfig){
+        if (!isConfig) {
             //System.out.println("接口未配置访问时间过滤器！");
-        }else{
-            if(isConfig && apiTimeFilterList.size() == 0){
+        } else {
+            if (isConfig && apiTimeFilterList.size() == 0) {
                 //System.out.println("接口已配置访问时间过滤器，但是没有配置具体时间段，默认全天可访问");
-            }else{
-                for (ApiTimeFilter apiTimeFilter:apiTimeFilterList) {
+            } else {
+                for (ApiTimeFilter apiTimeFilter : apiTimeFilterList) {
                     String stime = apiTimeFilter.getStime();
                     String etime = apiTimeFilter.getEtime();
-
-                    timeFlag = TimeCheckUtils.hourMinuteBetween(stime,etime);
+                    timeFlag = TimeCheckUtils.hourMinuteBetween(stime, etime);
                 }
-
-                if(!timeFlag){
+                if (!timeFlag) {
                     throw new ZtgeoBizZuulException(CodeMsg.TIME_FILTER_ERROR);
                 }
             }

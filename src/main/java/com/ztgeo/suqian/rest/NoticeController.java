@@ -54,7 +54,7 @@ public class NoticeController {
         try {
 
         // 1.查询发送者ID和待发送的通知类型
-        String userID = request.getHeader("form_user");
+        String userID = request.getHeader("from_user");
         String noticeCode = request.getHeader("api_id");
         RequestContext ctx = RequestContext.getCurrentContext();
         //2.获取body中的加密和加签数据并做解密

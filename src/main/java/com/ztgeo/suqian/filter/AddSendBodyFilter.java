@@ -14,6 +14,7 @@ import com.ztgeo.suqian.entity.ag_datashare.ApiBaseInfo;
 import com.ztgeo.suqian.msg.CodeMsg;
 import com.ztgeo.suqian.repository.ApiBaseInfoRepository;
 import com.ztgeo.suqian.utils.HttpUtils;
+import org.apache.commons.lang.StringUtils;
 import org.bson.codecs.configuration.CodecRegistries;
 import org.bson.codecs.configuration.CodecRegistry;
 import org.bson.codecs.pojo.PojoCodecProvider;
@@ -58,11 +59,25 @@ public class AddSendBodyFilter extends ZuulFilter {
             String sendbody=ctx.get(GlobalConstants.SENDBODY).toString();
             log.info("访问者IP:{}", HttpUtils.getIpAdrress(request));
             //1.获取heard中的userID和ApiID
-            String apiID=request.getHeader("api_id");
-            String userID=request.getHeader("form_user");
+            String apiID;
+            String userID;
+            String reqapiID=request.getHeader("api_id");
+            String requserID=request.getHeader("from_user");
+            String ctxApiId = ctx.get("api_id").toString();
+            String ctxFromUser = ctx.get("from_user").toString();
+            if(StringUtils.isEmpty(reqapiID)||StringUtils.isEmpty(requserID)){
+                if(StringUtils.isEmpty(ctxApiId)){
+                    throw new ZtgeoBizZuulException(CodeMsg.GETNULL_ERROR);
+                }else{
+                    apiID = ctxApiId;
+                    userID = ctxFromUser;
+                }
+            }else{
+                apiID = reqapiID;
+                userID = requserID;
+            }
             List<ApiBaseInfo> list =apiBaseInfoRepository.findApiBaseInfosByApiIdEquals(apiID);
             ApiBaseInfo apiBaseInfo=list.get(0);
-
             //3.相关信息存入到mongodb中,有待完善日志
             CodecRegistry pojoCodecRegistry = CodecRegistries.fromRegistries(MongoClient.getDefaultCodecRegistry(),
                     CodecRegistries.fromProviders(PojoCodecProvider.builder().automatic(true).build()));

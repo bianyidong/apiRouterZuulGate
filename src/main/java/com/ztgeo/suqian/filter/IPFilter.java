@@ -70,12 +70,7 @@ public class IPFilter extends ZuulFilter {
         RequestContext ctx= RequestContext.getCurrentContext();
         HttpServletRequest req=ctx.getRequest();
         String current_ip = this.getIpAddr(req);
-
-        // 判断逻辑
-        boolean IPFlag = false;
-
         List<ApiIpWhitelistFilter> apiIpWhitelistFilterList = apiIpWhitelistFilterRepository.findApiIpWhitelistFiltersByApiIdEquals(api_id);
-
         if(!isConfig){
             log.info("接口未配置IP过滤器！");
         }else{
@@ -83,10 +78,6 @@ public class IPFilter extends ZuulFilter {
                 log.info("接口已配置IP过滤器，但是没有配置IP，默认全网IP可访问");
             }else{
                 if(!judgeIPRule(apiIpWhitelistFilterList,current_ip)){
-                    throw new ZtgeoBizZuulException(CodeMsg.IP_FILTER_ERROR);
-                }
-
-                if(!IPFlag){
                     throw new ZtgeoBizZuulException(CodeMsg.IP_FILTER_ERROR);
                 }
             }

@@ -12,14 +12,6 @@ public enum CodeMsg {
     SDK_DECRYPT_FAIL(304,"解密失败"),
     SDK_PARAM_ERROR(305,"参数异常"),
 
-    /******************张宇-过滤器异常*******************/
-    YXLT_DZ_REQ_ERROR(505,"调用宜兴定制请求过滤器异常！"),
-    YXLT_DZ_RESP_ERROR(505,"调用宜兴定制响应过滤器异常！"),
-    API_FILTER_ERROR(501,"无法识别请求接口ID，拒绝访问"),
-    AUTHENTICATION_FILTER_ERROR(502,"无法识别身份信息，拒绝访问"),
-    IP_FILTER_ERROR(503, "无法识别请求IP，拒绝访问"),
-    TIME_FILTER_ERROR(504, "非合法时间请求，拒绝访问"),
-
     /******************共享平台异常*******************/
     UNRECOGNIZED_IDENTITY(401, "无法识别身份，拒绝访问"),
     ACCESS_DENY(402, "无访问权限"),
@@ -28,7 +20,26 @@ public enum CodeMsg {
     NOT_FOUNDUSER(405,"访问者没有权限，请开放权限"),
     SIGN_ERROR(406,"验签失败"),
     PARAMS_ERROR(407,"参数错误"),
-    FAIL(600, "平台网关内部错误");
+    FROMSIGN_ERROR(408,"共享平台请求方验签过滤器内部异常"),
+    FROMDATA_ERROR(409,"共享平台请求方解密过滤器内部异常"),
+    TOSIGN_ERROR(410,"共享平台请求方重新加签过滤器异常"),
+    TODATA_ERROR(411,"共享平台请求方重新加密过滤器异常"),
+    GETNULL_ERROR(412,"日志过滤器未获取到from_user或者api_id"),
+    RSPSIGN_ERROR(413,"共享平台返回验签过滤器内部异常"),
+    RSPDATA_ERROR(414,"共享平台返回解密过滤器异常"),
+    AGARSPDATA_ERROR(415,"共享平台返回重新加密过滤器异常"),
+    AGARSPSIGN_ERROR(412,"共享平台返回重新加签过滤器异常"),
+    FAIL(600, "平台网关内部错误"),
+
+    /******************张宇-过滤器异常*******************/
+    YXLT_DZ_REQ_ERROR(505,"调用宜兴定制请求过滤器异常！"),
+    YXLT_DZ_RESP_ERROR(505,"调用宜兴定制响应过滤器异常！"),
+    API_FILTER_ERROR(501,"无法识别请求接口ID，拒绝访问"),
+    AUTHENTICATION_FILTER_ERROR(502,"无法识别身份信息，拒绝访问"),
+    IP_FILTER_ERROR(503, "无法识别请求IP，拒绝访问"),
+    TIME_FILTER_ERROR(504, "非合法时间请求，拒绝访问");
+
+
 
     private CodeMsg(int statusCode, String message) {
         this.statusCode = statusCode;

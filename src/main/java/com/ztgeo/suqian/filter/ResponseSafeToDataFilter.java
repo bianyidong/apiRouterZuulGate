@@ -93,7 +93,7 @@ public class ResponseSafeToDataFilter extends ZuulFilter {
         try {
             RequestContext ctx = RequestContext.getCurrentContext();
             inputStream = ctx.getResponseDataStream();
-            String userID = ctx.getRequest().getHeader("form_user");
+            String userID = ctx.getRequest().getHeader("from_user");
             String apiID = ctx.getRequest().getHeader("api_id");
             //获取记录主键ID(来自routing过滤器保存的上下文)
             Object recordID = ctx.get(GlobalConstants.RECORD_PRIMARY_KEY);
@@ -169,7 +169,7 @@ public class ResponseSafeToDataFilter extends ZuulFilter {
         } catch (ZuulException z) {
             throw new ZtgeoBizZuulException(z, "post过滤器异常", z.nStatusCode, z.errorCause);
         } catch (Exception s) {
-            throw new ZtgeoBizZuulException(s, CodeMsg.FAIL, "内部异常");
+            throw new ZtgeoBizZuulException(s, CodeMsg.RSPDATA_ERROR, "内部异常");
         } finally {
             ResponseSafeToSignFilter.getFindlly(inputStream, inputStreamOld, inputStreamNew);
         }

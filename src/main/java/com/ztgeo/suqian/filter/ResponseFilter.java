@@ -84,7 +84,7 @@ public class ResponseFilter extends ZuulFilter {
         InputStream inputStreamNew = null;
         try {
             RequestContext ctx = RequestContext.getCurrentContext();
-            String userID = ctx.getRequest().getHeader("form_user");
+            String userID = ctx.getRequest().getHeader("from_user");
             inputStream = ctx.getResponseDataStream();
             String rspBody = ctx.getResponseBody();
             //获取记录主键ID(来自routing过滤器保存的上下文)
