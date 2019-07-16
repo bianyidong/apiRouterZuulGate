@@ -61,7 +61,7 @@ public class ResponseReceiveBodyFilter extends ZuulFilter {
 
     @Override
     public boolean shouldFilter() {
-            return true;
+        return true;
     }
 
     @Override
@@ -81,21 +81,16 @@ public class ResponseReceiveBodyFilter extends ZuulFilter {
                     CodecRegistries.fromProviders(PojoCodecProvider.builder().automatic(true).build()));
             MongoDatabase mongoDB = mongoClient.getDatabase(httpName).withCodecRegistry(pojoCodecRegistry);
             MongoCollection<HttpEntity> collection = mongoDB.getCollection(userID + "_record", HttpEntity.class);
-
-
-                log.info("未接收到{}返回的任何数据,记录ID:{}", accessClientIp, recordID);
-                BasicDBObject searchDoc = new BasicDBObject().append("iD", recordID);
-                BasicDBObject newDoc = new BasicDBObject("$set",
-                        new BasicDBObject().append("receiveBody", rspBody));
-                collection.findOneAndUpdate(searchDoc, newDoc, new FindOneAndUpdateOptions().upsert(true));
-                log.info("记录完成");
-
+            log.info("未接收到{}返回的任何数据,记录ID:{}", accessClientIp, recordID);
+            BasicDBObject searchDoc = new BasicDBObject().append("iD", recordID);
+            BasicDBObject newDoc = new BasicDBObject("$set",
+                    new BasicDBObject().append("receiveBody", rspBody));
+            collection.findOneAndUpdate(searchDoc, newDoc, new FindOneAndUpdateOptions().upsert(true));
+            log.info("记录完成");
             return null;
-        }
-        catch (ZuulException z) {
+        } catch (ZuulException z) {
             throw new ZtgeoBizZuulException(z, "post过滤器异常", z.nStatusCode, z.errorCause);
-        }
-        catch (Exception s) {
+        } catch (Exception s) {
             throw new ZtgeoBizZuulException(s, CodeMsg.FAIL, "内部异常");
         }
     }

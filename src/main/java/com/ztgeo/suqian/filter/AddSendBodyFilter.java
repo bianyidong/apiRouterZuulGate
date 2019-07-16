@@ -36,7 +36,9 @@ import java.util.List;
 
 
 /**
- * 用于鉴权
+ * 请求记录日志过滤器
+ * @author bianyidong
+ * @version 2019-7-12
  */
 @Component
 public class AddSendBodyFilter extends ZuulFilter {
