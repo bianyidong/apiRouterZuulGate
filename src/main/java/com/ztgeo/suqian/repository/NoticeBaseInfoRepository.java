@@ -7,6 +7,6 @@ import java.util.List;
 
 public interface NoticeBaseInfoRepository extends CrudRepository<NoticeBaseInfo,String> {
 
-    @Query(value = "select notice_path noticePath,nbi.user_real_id userRealId,nbi.username username,nbi.name name,uki.user_real_id from notice_base_info nbi inner join notice_user_rel nur on nbi.notice_id = nur.notice_id inner join user_key_info uki on nur.user_real_id = uki.user_real_id where uki.user_identity_id = ? and nur.type_id = ?",nativeQuery = true)
+    @Query(nativeQuery = true,value = "select * from notice_base_info nbi inner join notice_user_rel nur on nbi.notice_id = nur.notice_id inner join user_key_info uki on nur.user_real_id = uki.user_real_id where uki.user_real_id = ? and nur.type_id = ?")
     List<NoticeBaseInfo> querySendUrl(String userID,String noticeCode);
 }
