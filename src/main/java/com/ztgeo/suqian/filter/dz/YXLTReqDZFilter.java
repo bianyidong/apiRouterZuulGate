@@ -7,8 +7,10 @@ import com.netflix.zuul.exception.ZuulException;
 import com.netflix.zuul.http.ServletInputStreamWrapper;
 import com.ztgeo.suqian.common.GlobalConstants;
 import com.ztgeo.suqian.common.ZtgeoBizZuulException;
+import com.ztgeo.suqian.entity.ag_datashare.ApiBaseInfo;
 import com.ztgeo.suqian.entity.ag_datashare.ApiChangeType;
 import com.ztgeo.suqian.entity.ag_datashare.DzYixing;
+import com.ztgeo.suqian.repository.ApiBaseInfoRepository;
 import com.ztgeo.suqian.repository.DzYixingRepository;
 import com.ztgeo.suqian.utils.XmlAndJsonUtils;
 import io.micrometer.core.instrument.util.IOUtils;
@@ -27,6 +29,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletRequestWrapper;
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -40,6 +43,8 @@ public class YXLTReqDZFilter extends ZuulFilter {
 
     @Resource
     private DzYixingRepository dzYixingRepository;
+    @Resource
+    private ApiBaseInfoRepository apiBaseInfoRepository;
 
     @Override
     public String filterType() {
@@ -118,6 +123,13 @@ public class YXLTReqDZFilter extends ZuulFilter {
             // 为写日志设置body体信息;
             ctx.set(GlobalConstants.SENDBODY, jsonReqStr.toJSONString());
 
+            // 从数据库中获取定制URL真正的转发地址
+            String apiId = dzYixing.getApiId();
+            List<ApiBaseInfo> apiBaseInfoList = apiBaseInfoRepository.findApiBaseInfosByApiIdEquals(apiId);
+            ApiBaseInfo apiBaseInfo = apiBaseInfoList.get(0);
+
+            String realPath = apiBaseInfo.getPath();
+
             // 将JSON设置到请求体中，并设置请求方式为POST
             String newbody = jsonReqStr.toJSONString();
             // BODY体设置
@@ -140,6 +152,12 @@ public class YXLTReqDZFilter extends ZuulFilter {
                 @Override
                 public long getContentLengthLong() {
                     return reqBodyBytes.length;
+                }
+
+                // 设置真正的转发地址
+                @Override
+                public String getRequestURI() {
+                    return realPath;
                 }
             });
 
