@@ -67,7 +67,7 @@ public class ResponseReceiveBodyFilter extends ZuulFilter {
 
     @Override
     public Object run() throws ZuulException {
-        log.info("=================进入post通用过滤器,接收返回的数据=====================");
+        log.info("=================进入响应记录日志过滤器,接收返回的数据=====================");
         try {
             RequestContext ctx = RequestContext.getCurrentContext();
             String userID;

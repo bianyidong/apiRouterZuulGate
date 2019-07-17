@@ -75,10 +75,6 @@ public class YXLTReqDZFilter extends ZuulFilter {
             return true;
         }
     }
-    private static Map<String, String> urlMap=new HashMap<>();
-    static {
-        urlMap.put("t", "/test/");
-    }
     @Override
     public Object run() throws ZuulException {
         //请求方式转换（宜兴）

@@ -8,10 +8,11 @@ import com.ztgeo.suqian.common.CryptographyOperation;
 import com.ztgeo.suqian.common.GlobalConstants;
 import com.ztgeo.suqian.common.ZtgeoBizRuntimeException;
 import com.ztgeo.suqian.common.ZtgeoBizZuulException;
-import com.ztgeo.suqian.entity.NoticeBaseInfo;
+import com.ztgeo.suqian.entity.ag_datashare.NoticeBaseInfo;
 import com.ztgeo.suqian.entity.ag_datashare.UserKeyInfo;
 import com.ztgeo.suqian.msg.CodeMsg;
 import com.ztgeo.suqian.msg.ResultMap;
+import com.ztgeo.suqian.repository.NoticeBaseInfoRepository;
 import com.ztgeo.suqian.utils.HttpUtils;
 import okhttp3.*;
 import org.apache.commons.lang3.StringUtils;
@@ -25,6 +26,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.RequestBody;
 
+import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.io.InputStream;
@@ -44,7 +46,8 @@ import java.util.concurrent.TimeUnit;
 public class NoticeController {
 
     private JdbcTemplate jdbcTemplate;
-
+    @Resource
+    private NoticeBaseInfoRepository noticeBaseInfoRepository;
     /**
      *  发送通知
      */
@@ -63,7 +66,7 @@ public class NoticeController {
         String sign=jsonObject.get("sign").toString();
 //            String sendStr="";
         // 查询待发送的http列表
-        List<NoticeBaseInfo> urlList =jdbcTemplate.query("select nbi.notice_path noticePath,nbi.user_real_id userRealId from notice_base_info nbi inner join notice_user_rel nur on nbi.notice_id = nur.notice_id inner join user_key_info uki on nur.user_real_id = uki.user_real_id where uki.user_identity_id = ? and nur.type_id = ?",new Object[]{userID,noticeCode},new RowMapper<NoticeBaseInfo>(){
+       /* List<NoticeBaseInfo> urlList =jdbcTemplate.query("select nbi.notice_path noticePath,nbi.user_real_id userRealId from notice_base_info nbi inner join notice_user_rel nur on nbi.notice_id = nur.notice_id inner join user_key_info uki on nur.user_real_id = uki.user_real_id where uki.user_identity_id = ? and nur.type_id = ?",new Object[]{userID,noticeCode},new RowMapper<NoticeBaseInfo>(){
             @Nullable
             @Override
             public NoticeBaseInfo mapRow(ResultSet rs, int rowNum) throws SQLException {
@@ -76,7 +79,8 @@ public class NoticeController {
                 System.out.println("通知信息"+noticeBaseInfo);
                 return noticeBaseInfo;
             }
-        });
+        });*/
+            List<NoticeBaseInfo> urlList =noticeBaseInfoRepository.querySendUrl(userID,noticeCode);
         // 异步发送http请求
         for (int i = 0; i < urlList.size(); i++) {
             OkHttpClient okHttpClient = new OkHttpClient.Builder()
