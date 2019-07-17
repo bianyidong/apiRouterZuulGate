@@ -57,7 +57,7 @@ public class YXLTRespDZFilter extends ZuulFilter {
     public boolean shouldFilter() {
         /**
          * 宜兴地税定制过滤器
-         * 因为定制过滤器无APIID与FROMUSER，只能通过定制表中的是否有相同请求来判断是否执行过滤器。
+         * 因为定制过滤器在请求时修改了真正的转发地址，在响应中应该从ctx中获取APIID进行判断
          */
         // 获取当前请求
         RequestContext ctx = RequestContext.getCurrentContext();
