@@ -8,14 +8,14 @@ spring:
       username: root
       password: 123456
   redis:
-     host: 127.0.0.1
+     host: 172.18.0.147
      port: 6379
      timeout: 1000
     # Redis数据库索引（默认为0）
      database: 3
   data:
      mongodb:
-     uri: mongodb://ztgeo:123456@localhost:27017/http_db
+       uri: mongodb://ztgeo:123456@172.18.0.147:27017/http_db
 server:
   port: 8001
 zuul:

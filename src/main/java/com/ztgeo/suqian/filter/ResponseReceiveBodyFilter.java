@@ -14,6 +14,7 @@ import com.ztgeo.suqian.entity.HttpEntity;
 import com.ztgeo.suqian.msg.CodeMsg;
 import com.ztgeo.suqian.repository.ApiUserFilterRepository;
 import com.ztgeo.suqian.utils.StreamOperateUtils;
+import org.apache.commons.lang.StringUtils;
 import org.bson.codecs.configuration.CodecRegistries;
 import org.bson.codecs.configuration.CodecRegistry;
 import org.bson.codecs.pojo.PojoCodecProvider;
@@ -69,7 +70,19 @@ public class ResponseReceiveBodyFilter extends ZuulFilter {
         log.info("=================进入post通用过滤器,接收返回的数据=====================");
         try {
             RequestContext ctx = RequestContext.getCurrentContext();
-            String userID = ctx.getRequest().getHeader("from_user");
+            String userID;
+            String requserID= ctx.getRequest().getHeader("from_user");
+            String ctxFromUser = ctx.get("from_user").toString();
+            if(StringUtils.isEmpty(requserID)){
+                if(StringUtils.isEmpty(ctxFromUser)){
+                    throw new ZtgeoBizZuulException(CodeMsg.GETNULL_ERROR);
+                }else{
+                    userID = ctxFromUser;
+                    ctx.addZuulResponseHeader("Content-Type","text/xml");
+                }
+            }else{
+                userID = requserID;
+            }
             String rspBody = ctx.getResponseBody();
             log.info("接收到返回的数据{}", rspBody);
             //获取记录主键ID(来自routing过滤器保存的上下文)
@@ -81,7 +94,6 @@ public class ResponseReceiveBodyFilter extends ZuulFilter {
                     CodecRegistries.fromProviders(PojoCodecProvider.builder().automatic(true).build()));
             MongoDatabase mongoDB = mongoClient.getDatabase(httpName).withCodecRegistry(pojoCodecRegistry);
             MongoCollection<HttpEntity> collection = mongoDB.getCollection(userID + "_record", HttpEntity.class);
-            log.info("未接收到{}返回的任何数据,记录ID:{}", accessClientIp, recordID);
             BasicDBObject searchDoc = new BasicDBObject().append("iD", recordID);
             BasicDBObject newDoc = new BasicDBObject("$set",
                     new BasicDBObject().append("receiveBody", rspBody));

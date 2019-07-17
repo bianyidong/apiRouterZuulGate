@@ -23,6 +23,7 @@ import org.springframework.util.StringUtils;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -98,8 +99,8 @@ public class YXLTRespDZFilter extends ZuulFilter {
 
             // 通过请求地址再次将定制实例查询
             DzYixing dzYixing = dzYixingRepository.findDzYixingsByUrlEquals(requestURI);
-            String soapbodyReq = dzYixing.getSoapbodyReq();
-            String realRespString = soapbodyReq.replaceAll("###",xml);
+            String soapbodyResp = dzYixing.getSoapbodyResp();
+            String realRespString = soapbodyResp.replaceAll("###",xml);
             log.info("realResp：" + realRespString);
 
             ctx.setResponseBody(realRespString);

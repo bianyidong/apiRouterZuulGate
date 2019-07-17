@@ -26,6 +26,8 @@ import javax.servlet.ServletInputStream;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletRequestWrapper;
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -60,6 +62,7 @@ public class YXLTReqDZFilter extends ZuulFilter {
         HttpServletRequest httpServletRequest = ctx.getRequest();
         // 获取请求方法名及对应的定制配置信息
         String requestURI = httpServletRequest.getRequestURI();
+        System.out.println(requestURI);
         DzYixing dzYixing = dzYixingRepository.findDzYixingsByUrlEquals(requestURI);
         if(StringUtils.isEmpty(dzYixing)){
             return false;
@@ -67,7 +70,10 @@ public class YXLTReqDZFilter extends ZuulFilter {
             return true;
         }
     }
-
+    private static Map<String, String> urlMap=new HashMap<>();
+    static {
+        urlMap.put("t", "/test/");
+    }
     @Override
     public Object run() throws ZuulException {
         //请求方式转换（宜兴）
@@ -138,6 +144,7 @@ public class YXLTReqDZFilter extends ZuulFilter {
             });
 
         } catch (Exception e) {
+            e.printStackTrace();
             throw new ZtgeoBizZuulException(CodeMsg.YXLT_DZ_REQ_ERROR);
         }
         return null;
