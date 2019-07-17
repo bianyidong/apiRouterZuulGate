@@ -34,7 +34,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- *  宜兴地税定制---响应
+ * 宜兴地税定制---响应
  */
 @Component
 public class YXLTRespDZFilter extends ZuulFilter {
@@ -61,13 +61,12 @@ public class YXLTRespDZFilter extends ZuulFilter {
          */
         // 获取当前请求
         RequestContext ctx = RequestContext.getCurrentContext();
-        HttpServletRequest httpServletRequest = ctx.getRequest();
-        // 获取请求方法名及对应的定制配置信息
-        String requestURI = httpServletRequest.getRequestURI();
-        DzYixing dzYixing = dzYixingRepository.findDzYixingsByUrlEquals(requestURI);
-        if(StringUtils.isEmpty(dzYixing)){
+        String api_id = ctx.get("api_id").toString();
+
+        DzYixing dzYixing = dzYixingRepository.findDzYixingsByApiIdEquals(api_id);
+        if (StringUtils.isEmpty(dzYixing)) {
             return false;
-        }else{
+        } else {
             return true;
         }
     }
@@ -86,21 +85,21 @@ public class YXLTRespDZFilter extends ZuulFilter {
 
             // utf8 -- gbk,字段大写
             String xml = XmlAndJsonUtils.json2xml_UpperCase(responseBody);
-            xml = xml.replaceAll("utf-8","GBK");
-            xml = xml.replaceAll("UTF-8","GBK");
+            xml = xml.replaceAll("utf-8", "GBK");
+            xml = xml.replaceAll("UTF-8", "GBK");
 
             // 增加jstl3BizPackage版本号
-            xml = xml.replaceAll("<jslt3BizPackage>","<jslt3BizPackage version=\"1.0\">");
+            xml = xml.replaceAll("<jslt3BizPackage>", "<jslt3BizPackage version=\"1.0\">");
             log.info("转换XML：" + xml);
 
             // 对<>进行转义
-            xml = xml.replaceAll("<","&lt;");
-            xml = xml.replaceAll(">","&gt;");
+            xml = xml.replaceAll("<", "&lt;");
+            xml = xml.replaceAll(">", "&gt;");
 
             // 通过请求地址再次将定制实例查询
             DzYixing dzYixing = dzYixingRepository.findDzYixingsByUrlEquals(requestURI);
             String soapbodyResp = dzYixing.getSoapbodyResp();
-            String realRespString = soapbodyResp.replaceAll("###",xml);
+            String realRespString = soapbodyResp.replaceAll("###", xml);
             log.info("realResp：" + realRespString);
 
             ctx.setResponseBody(realRespString);

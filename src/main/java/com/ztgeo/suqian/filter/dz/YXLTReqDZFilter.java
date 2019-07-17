@@ -35,7 +35,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- *  宜兴地税定制---请求
+ * 宜兴地税定制---请求
  */
 @Component
 public class YXLTReqDZFilter extends ZuulFilter {
@@ -69,16 +69,19 @@ public class YXLTReqDZFilter extends ZuulFilter {
         String requestURI = httpServletRequest.getRequestURI();
         System.out.println(requestURI);
         DzYixing dzYixing = dzYixingRepository.findDzYixingsByUrlEquals(requestURI);
-        if(StringUtils.isEmpty(dzYixing)){
+        if (StringUtils.isEmpty(dzYixing)) {
             return false;
-        }else{
+        } else {
             return true;
         }
     }
-    private static Map<String, String> urlMap=new HashMap<>();
+
+    private static Map<String, String> urlMap = new HashMap<>();
+
     static {
         urlMap.put("t", "/test/");
     }
+
     @Override
     public Object run() throws ZuulException {
         //请求方式转换（宜兴）
@@ -96,13 +99,13 @@ public class YXLTReqDZFilter extends ZuulFilter {
             String currentMethod = httpServletRequest.getMethod();
 
             String reqXmlStr = null;
-            if(StringUtils.isEmpty(currentContentType)) {
+            if (StringUtils.isEmpty(currentContentType)) {
                 if ("GET".equals(currentMethod)) {
                     reqXmlStr = httpServletRequest.getParameter("xml");
                 } else {
                     throw new ZtgeoBizZuulException(CodeMsg.YXLT_DZ_CONTENT_TYPE_METHOD_ERROR);
                 }
-            }else{
+            } else {
                 throw new ZtgeoBizZuulException(CodeMsg.YXLT_DZ_CONTENT_TYPE_METHOD_ERROR);
             }
 
@@ -117,8 +120,8 @@ public class YXLTReqDZFilter extends ZuulFilter {
             log.info("转换JSON后：" + jsonReqStr.toJSONString());
 
             // 增加头信息，因头信息会被过滤故设置到ctx中
-            ctx.set("api_id",dzYixing.getApiId());
-            ctx.set("from_user",dzYixing.getFromUser());
+            ctx.set("api_id", dzYixing.getApiId());
+            ctx.set("from_user", dzYixing.getFromUser());
 
             // 为写日志设置body体信息;
             ctx.set(GlobalConstants.SENDBODY, jsonReqStr.toJSONString());
@@ -134,7 +137,7 @@ public class YXLTReqDZFilter extends ZuulFilter {
             String newbody = jsonReqStr.toJSONString();
             // BODY体设置
             final byte[] reqBodyBytes = newbody.getBytes();
-            ctx.setRequest(new HttpServletRequestWrapper(httpServletRequest){
+            ctx.setRequest(new HttpServletRequestWrapper(httpServletRequest) {
 
                 @Override
                 public String getMethod() {
@@ -145,10 +148,12 @@ public class YXLTReqDZFilter extends ZuulFilter {
                 public ServletInputStream getInputStream() throws IOException {
                     return new ServletInputStreamWrapper(reqBodyBytes);
                 }
+
                 @Override
                 public int getContentLength() {
                     return reqBodyBytes.length;
                 }
+
                 @Override
                 public long getContentLengthLong() {
                     return reqBodyBytes.length;
