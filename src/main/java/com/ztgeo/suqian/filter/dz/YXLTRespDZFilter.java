@@ -97,7 +97,7 @@ public class YXLTRespDZFilter extends ZuulFilter {
             xml = xml.replaceAll(">", "&gt;");
 
             // 通过请求地址再次将定制实例查询
-            DzYixing dzYixing = dzYixingRepository.findDzYixingsByUrlEquals(requestURI);
+            DzYixing dzYixing = dzYixingRepository.findDzYixingsByApiIdEquals(ctx.get("api_id").toString());
             String soapbodyResp = dzYixing.getSoapbodyResp();
             String realRespString = soapbodyResp.replaceAll("###", xml);
             log.info("realResp：" + realRespString);
