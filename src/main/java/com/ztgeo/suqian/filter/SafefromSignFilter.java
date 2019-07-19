@@ -1,24 +1,17 @@
 package com.ztgeo.suqian.filter;
 
 import javax.annotation.Resource;
-
 import javax.servlet.http.HttpServletRequest;
-
-
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
-import com.mongodb.MongoClient;
-
 import com.ztgeo.suqian.common.CryptographyOperation;
 import com.ztgeo.suqian.common.GlobalConstants;
 import com.ztgeo.suqian.common.ZtgeoBizRuntimeException;
 import com.ztgeo.suqian.common.ZtgeoBizZuulException;
 import com.ztgeo.suqian.config.RedisOperator;
-
 import com.ztgeo.suqian.entity.ag_datashare.UserKeyInfo;
 import com.ztgeo.suqian.msg.CodeMsg;
 import com.ztgeo.suqian.repository.ApiUserFilterRepository;
-
 import com.ztgeo.suqian.repository.UserKeyInfoRepository;
 import org.apache.commons.lang3.StringUtils;
 
@@ -28,7 +21,6 @@ import com.netflix.zuul.ZuulFilter;
 import com.netflix.zuul.context.RequestContext;
 import com.netflix.zuul.exception.ZuulException;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.netflix.zuul.filters.support.FilterConstants;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StreamUtils;

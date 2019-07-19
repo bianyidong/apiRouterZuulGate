@@ -17,4 +17,5 @@ public class GlobalConstants {
     // 发送的数据
     public static final String SENDBODY = "";
 
+
 }

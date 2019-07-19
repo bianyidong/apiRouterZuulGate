@@ -12,8 +12,6 @@ import com.ztgeo.suqian.common.GlobalConstants;
 import com.ztgeo.suqian.common.ZtgeoBizZuulException;
 import com.ztgeo.suqian.entity.HttpEntity;
 import com.ztgeo.suqian.msg.CodeMsg;
-import com.ztgeo.suqian.repository.ApiUserFilterRepository;
-import com.ztgeo.suqian.utils.StreamOperateUtils;
 import org.apache.commons.lang.StringUtils;
 import org.bson.codecs.configuration.CodecRegistries;
 import org.bson.codecs.configuration.CodecRegistry;
@@ -24,14 +22,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.netflix.zuul.filters.support.FilterConstants;
 import org.springframework.stereotype.Component;
-import org.springframework.util.StreamUtils;
-
-import javax.annotation.Resource;
-import javax.servlet.http.HttpServletRequest;
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.InputStream;
-import java.nio.charset.StandardCharsets;
 import java.util.Objects;
 
 
@@ -72,8 +62,9 @@ public class ResponseReceiveBodyFilter extends ZuulFilter {
             RequestContext ctx = RequestContext.getCurrentContext();
             String userID;
             String requserID= ctx.getRequest().getHeader("from_user");
-            String ctxFromUser = ctx.get("from_user").toString();
+
             if(StringUtils.isEmpty(requserID)){
+                String ctxFromUser = ctx.get("from_user").toString();
                 if(StringUtils.isEmpty(ctxFromUser)){
                     throw new ZtgeoBizZuulException(CodeMsg.GETNULL_ERROR);
                 }else{

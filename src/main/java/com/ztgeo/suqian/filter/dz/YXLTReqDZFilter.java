@@ -118,7 +118,6 @@ public class YXLTReqDZFilter extends ZuulFilter {
 
             // 为写日志设置body体信息;
             ctx.set(GlobalConstants.SENDBODY, jsonReqStr.toJSONString());
-
             // 从数据库中获取定制URL真正的转发地址
             String apiId = dzYixing.getApiId();
             List<ApiBaseInfo> apiBaseInfoList = apiBaseInfoRepository.findApiBaseInfosByApiIdEquals(apiId);

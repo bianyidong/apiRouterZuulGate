@@ -21,11 +21,20 @@ public class NoticeRecord implements Serializable {
     private String receiver_url;
     private String receiver_usename;
     private String receiver_name;
+    private String noticeCode;
     private String typedesc;
     private Integer status;
     private Date send_time;
     private Integer count;
     private String request_data;
+
+    public String getNoticeCode() {
+        return noticeCode;
+    }
+
+    public void setNoticeCode(String noticeCode) {
+        this.noticeCode = noticeCode;
+    }
 
     public String getRecord_id() {
         return record_id;

@@ -66,9 +66,10 @@ public class AddSendBodyFilter extends ZuulFilter {
             String userID;
             String reqapiID=request.getHeader("api_id");
             String requserID=request.getHeader("from_user");
-            String ctxApiId = ctx.get("api_id").toString();
-            String ctxFromUser = ctx.get("from_user").toString();
+
             if(StringUtils.isEmpty(reqapiID)||StringUtils.isEmpty(requserID)){
+                String ctxApiId = ctx.get("api_id").toString();
+                String ctxFromUser = ctx.get("from_user").toString();
                 if(StringUtils.isEmpty(ctxApiId)){
                     throw new ZtgeoBizZuulException(CodeMsg.GETNULL_ERROR);
                 }else{
@@ -113,7 +114,7 @@ public class AddSendBodyFilter extends ZuulFilter {
             collection.insertOne(httpEntity);
             ctx.set(GlobalConstants.RECORD_PRIMARY_KEY,id);
             ctx.set(GlobalConstants.ACCESS_IP_KEY, accessClientIp);
-//            return getObject(ctx,request,sendbody);
+           // return getObject(ctx,request,sendbody);
             return null;
         } catch (Exception e){
             e.printStackTrace();

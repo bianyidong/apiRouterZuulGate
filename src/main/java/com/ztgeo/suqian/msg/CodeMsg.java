@@ -28,8 +28,9 @@ public enum CodeMsg {
     RSPSIGN_ERROR(413,"共享平台返回验签过滤器内部异常"),
     RSPDATA_ERROR(414,"共享平台返回解密过滤器异常"),
     AGARSPDATA_ERROR(415,"共享平台返回重新加密过滤器异常"),
-    AGARSPSIGN_ERROR(412,"共享平台返回重新加签过滤器异常"),
-    FAIL(600, "平台网关内部错误"),
+    AGARSPSIGN_ERROR(416,"共享平台返回重新加签过滤器异常"),
+    RECEIVE_EXCEPTION(417,"接收方业务处理错误，待重新发送"),
+    FAIL(500, "平台网关内部错误"),
 
     /******************张宇-过滤器异常*******************/
     API_FILTER_ERROR(501,"无法识别请求接口ID，拒绝访问"),

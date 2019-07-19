@@ -1,8 +1,6 @@
 package com.ztgeo.suqian.common;
 import com.alibaba.fastjson.JSONObject;
-import com.netflix.zuul.context.RequestContext;
 import com.ztgeo.suqian.config.RedisOperator;
-import com.ztgeo.suqian.entity.UserKey;
 import com.ztgeo.suqian.entity.ag_datashare.UserKeyInfo;
 import com.ztgeo.suqian.repository.UserKeyInfoRepository;
 import org.slf4j.Logger;
@@ -10,12 +8,10 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.core.annotation.Order;
-import org.springframework.jdbc.core.BeanPropertyRowMapper;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
-import javax.servlet.http.HttpServletRequest;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
@@ -44,8 +40,7 @@ public class initUserKeys implements CommandLineRunner {
     public void run(String... args) throws Exception {
 
         log.info("=========密钥初始化,数据加载到Redis,时间:{}", DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").format(LocalDateTime.now()));
-        // 查询数据库里的黑名单列表数据
-        //List<UserKey> listUserKeys = jdbcTemplate.query("select uki.user_real_id, uki.symmetric_pubkey,uki.sign_secret_key,uki.sign_pub_key,uki.sign_pt_secret_key,uki.sign_pt_pub_key  FROM user_key_info uki ", new BeanPropertyRowMapper<>(UserKey.class));
+        //查询所有用户密钥信息
         List<UserKeyInfo> listUserKeys=userKeyInfoRepository.findAll();
         for (int i = 0; i < listUserKeys.size(); i++) {
             JSONObject setjsonObject = new JSONObject();

@@ -61,12 +61,10 @@ public class YXLTRespDZFilter extends ZuulFilter {
          */
         // 获取当前请求
         RequestContext ctx = RequestContext.getCurrentContext();
-        String api_id = ctx.get("api_id").toString();
-
-        DzYixing dzYixing = dzYixingRepository.findDzYixingsByApiIdEquals(api_id);
-        if (StringUtils.isEmpty(dzYixing)) {
+        Object dzObj = ctx.get("api_id");
+        if(StringUtils.isEmpty(dzObj)){
             return false;
-        } else {
+        }else{
             return true;
         }
     }
