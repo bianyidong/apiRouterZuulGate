@@ -9,16 +9,12 @@ import com.ztgeo.suqian.common.ZtgeoBizZuulException;
 import com.ztgeo.suqian.msg.CodeMsg;
 import com.ztgeo.suqian.repository.ApiUserFilterRepository;
 import com.ztgeo.suqian.utils.StreamOperateUtils;
-import com.ztgeo.suqian.utils.StringUtils;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.netflix.zuul.filters.support.FilterConstants;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StreamUtils;
-
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import java.io.*;
@@ -31,7 +27,7 @@ import java.util.Objects;
  * 响应过滤器
  *
  * @author bianyidong
- * @version 2019-6-21
+ * @version 2019-7-19
  */
 @Component
 public class ResponseFilter extends ZuulFilter {

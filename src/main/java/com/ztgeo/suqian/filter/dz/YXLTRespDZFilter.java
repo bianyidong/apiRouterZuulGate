@@ -4,13 +4,8 @@ import com.netflix.zuul.ZuulFilter;
 import com.netflix.zuul.context.RequestContext;
 import com.netflix.zuul.exception.ZuulException;
 import com.ztgeo.suqian.common.ZtgeoBizZuulException;
-import com.ztgeo.suqian.entity.ag_datashare.ApiChangeType;
-import com.ztgeo.suqian.entity.ag_datashare.ApiIpWhitelistFilter;
 import com.ztgeo.suqian.entity.ag_datashare.DzYixing;
 import com.ztgeo.suqian.msg.CodeMsg;
-import com.ztgeo.suqian.repository.ApiChangeTypeRepository;
-import com.ztgeo.suqian.repository.ApiIpWhitelistFilterRepository;
-import com.ztgeo.suqian.repository.ApiUserFilterRepository;
 import com.ztgeo.suqian.repository.DzYixingRepository;
 import com.ztgeo.suqian.utils.StreamOperateUtils;
 import com.ztgeo.suqian.utils.XmlAndJsonUtils;
@@ -20,19 +15,13 @@ import org.springframework.cloud.netflix.zuul.filters.support.FilterConstants;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StreamUtils;
 import org.springframework.util.StringUtils;
-
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
-import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
 /**
  * 宜兴地税定制---响应
  */
