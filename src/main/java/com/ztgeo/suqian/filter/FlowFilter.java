@@ -35,8 +35,7 @@ public class FlowFilter extends ZuulFilter {
 
     @Override
     public int filterOrder() {
-        ApiFlowConfig apiFlowConfig = apiFlowConfigRepository.findApiFlowConfigsByApiIdEquals("1h5OiYUA");
-        return  apiFlowConfig.getLimitCount();
+        return -55;
     }
 
     @Override
