@@ -67,7 +67,7 @@ public class SafefromSignFilter extends ZuulFilter {
             String sign=jsonObject.get("sign").toString();
             if (StringUtils.isBlank(data) || StringUtils.isBlank(sign)) {
                 log.info("参数错误，未获取到数据或签名");
-                throw new ZtgeoBizZuulException(CodeMsg.PARAMS_ERROR, "未获取到数据或签名");
+                throw new ZtgeoBizZuulException(CodeMsg.PARAMS_ERROR, "未获取到安全请求方密钥验签过滤器数据或签名");
             }
             //获取redis中的key值
             String str = redis.get(USER_REDIS_SESSION +":"+userID);
@@ -86,7 +86,7 @@ public class SafefromSignFilter extends ZuulFilter {
                 JSONObject getjsonObject = JSONObject.parseObject(str);
                 Sign_pub_key=getjsonObject.getString("Sign_pub_key");
                 if (StringUtils.isBlank(Sign_pub_key)){
-                     throw new ZtgeoBizRuntimeException(CodeMsg.FAIL, "未查询到请求方密钥信息");
+                     throw new ZtgeoBizRuntimeException(CodeMsg.FAIL, "未查询到安全请求方密钥验签过滤器密钥信息");
                 }
             }
             // 验证签名

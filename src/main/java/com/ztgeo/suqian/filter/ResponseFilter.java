@@ -77,7 +77,7 @@ public class ResponseFilter extends ZuulFilter {
             Object recordID = ctx.get(GlobalConstants.RECORD_PRIMARY_KEY);
             Object accessClientIp = ctx.get(GlobalConstants.ACCESS_IP_KEY);
             if (Objects.equals(null, accessClientIp) || Objects.equals(null, recordID))
-                throw new ZtgeoBizZuulException(CodeMsg.FAIL, "访问者IP或记录ID未获取到");
+                throw new ZtgeoBizZuulException(CodeMsg.FAIL, "post通用过滤器访问者IP或记录ID未获取到");
             if (!Objects.equals(null, inputStream)) {
                 System.out.println(inputStream.available());
                 // 获取返回的body
@@ -88,14 +88,14 @@ public class ResponseFilter extends ZuulFilter {
                 // 获取返回的body字符串
                 String responseBody = StreamUtils.copyToString(inputStreamOld, StandardCharsets.UTF_8);
                 if (Objects.equals(null, responseBody)) {
-                    throw new ZtgeoBizZuulException(CodeMsg.FAIL, "响应报文未获取到");
+                    throw new ZtgeoBizZuulException(CodeMsg.FAIL, "post通用过滤器响应报文未获取到");
                 }
                 ctx.setResponseBody(responseBody);
-                log.info("入库完成");
+                log.info("post通用过滤器入库完成");
                 ctx.setResponseDataStream(inputStreamNew);
             } else if (!Objects.equals(null, rspBody)) {
                 ctx.setResponseBody(rspBody);
-                log.info("入库完成");
+                log.info("post通用过滤器入库完成");
             } else {
                 log.info("未接收到返回的任何数据,记录ID:{}", recordID);
 
@@ -104,7 +104,7 @@ public class ResponseFilter extends ZuulFilter {
             ctx.set(GlobalConstants.ACCESS_IP_KEY, accessClientIp);
             return null;
         } catch (ZuulException z) {
-            throw new ZtgeoBizZuulException(z, "post过滤器异常", z.nStatusCode, z.errorCause);
+            throw new ZtgeoBizZuulException(z, "post通用过滤器异常", z.nStatusCode, z.errorCause);
         } catch (Exception s) {
             throw new ZtgeoBizZuulException(s, CodeMsg.FAIL, "内部异常");
         } finally {

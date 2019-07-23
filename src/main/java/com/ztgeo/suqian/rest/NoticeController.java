@@ -5,7 +5,7 @@ import com.alibaba.fastjson.JSONObject;
 import com.netflix.zuul.context.RequestContext;
 import com.netflix.zuul.exception.ZuulException;
 import com.ztgeo.suqian.common.CryptographyOperation;
-import com.ztgeo.suqian.common.GlobalConstants;
+
 import com.ztgeo.suqian.common.ZtgeoBizRuntimeException;
 import com.ztgeo.suqian.common.ZtgeoBizZuulException;
 import com.ztgeo.suqian.config.RedisOperator;
@@ -18,15 +18,11 @@ import com.ztgeo.suqian.msg.ResultMap;
 import com.ztgeo.suqian.repository.NoticeBaseInfoRepository;
 import com.ztgeo.suqian.repository.NoticeRecordRepository;
 import com.ztgeo.suqian.repository.UserKeyInfoRepository;
-import com.ztgeo.suqian.utils.HttpUtils;
+
 import okhttp3.*;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.jdbc.core.PreparedStatementSetter;
-import org.springframework.jdbc.core.RowMapper;
-import org.springframework.lang.Nullable;
-import org.springframework.util.StreamUtils;
+
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
@@ -35,16 +31,13 @@ import org.springframework.web.bind.annotation.RequestBody;
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
-import java.io.InputStream;
-import java.nio.charset.Charset;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import static com.ztgeo.suqian.common.GlobalConstants.USER_REDIS_SESSION;
 
@@ -53,7 +46,7 @@ import static com.ztgeo.suqian.common.GlobalConstants.USER_REDIS_SESSION;
  */
 @RestController
 public class NoticeController {
-
+    private static final Logger log = LoggerFactory.getLogger(RouteController.class);
     private String Symmetric_pubkey;
 
     private String SignPubKey;
@@ -72,7 +65,6 @@ public class NoticeController {
     public String sendNotice(HttpServletRequest request, @RequestBody String bodyStr) throws ZuulException {
 
         try {
-
             // 1.查询发送者ID和待发送的通知类型
             String userID = request.getHeader("from_user");
             String noticeCode = request.getHeader("api_id");
@@ -82,7 +74,7 @@ public class NoticeController {
             String data = jsonObject.get("data").toString();
             String sign = jsonObject.get("sign").toString();
             if (StringUtils.isBlank(data) || StringUtils.isBlank(sign))
-                throw new ZtgeoBizZuulException(CodeMsg.PARAMS_ERROR, "未获取到数据或签名");
+                throw new ZtgeoBizZuulException(CodeMsg.PARAMS_ERROR, "未获取到通知数据或签名");
             //获取redis中的key值
             String str = redis.get(USER_REDIS_SESSION +":"+userID);
             if (StringUtils.isBlank(str)){
@@ -102,13 +94,16 @@ public class NoticeController {
                 Symmetric_pubkey=getjsonObject.getString("Symmetric_pubkey");
                 SignPubKey=getjsonObject.getString("Sign_pub_key");
                 if (StringUtils.isBlank(Symmetric_pubkey)){
-                    throw new ZtgeoBizRuntimeException(CodeMsg.FAIL, "未查询到请求方密钥信息");
+                    log.info("未查询到通知请求方密钥信息");
+                    throw new ZtgeoBizRuntimeException(CodeMsg.FAIL, "未查询到通知请求方密钥信息");
                 }
             }
             // 验证签名
             boolean verifyResult = CryptographyOperation.signatureVerify(SignPubKey, data, sign);
-            if (Objects.equals(verifyResult, false))
+            if (Objects.equals(verifyResult, false)) {
+                log.info("通知请求方验签失败");
                 throw new ZtgeoBizRuntimeException(CodeMsg.SIGN_ERROR);
+            }
             // 解密数据
             String reqDecryptData = CryptographyOperation.aesDecrypt(Symmetric_pubkey, data);
             // 查询待发送的http列表
@@ -134,7 +129,7 @@ public class NoticeController {
                 DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
                 String currentTime = dateTimeFormatter.format(localDateTime);
                 if (StringUtils.isBlank(receiveSignPtSecretKey) || StringUtils.isBlank(receiveAesKey))
-                    throw new ZtgeoBizRuntimeException(CodeMsg.FAIL, "未查询到接收方密钥信息");
+                    throw new ZtgeoBizRuntimeException(CodeMsg.FAIL, "未查询到要通知接收方密钥信息");
                 // 重新加密加签
                 String receiveEncryptData = CryptographyOperation.aesEncrypt(receiveAesKey, reqDecryptData);
                 String receiveSign = CryptographyOperation.generateSign(receiveSignPtSecretKey, receiveEncryptData);
@@ -162,7 +157,6 @@ public class NoticeController {
                         // 数据
                         noticeRecordRepository.save(new NoticeRecord(id,userID,receiverId,url,receiverName,name,noticeCode,typedesc,1,currentTime,0,sendStr));
                     }
-
                     @Override
                     public void onResponse(Call call, Response response) throws IOException {
                         response.body().string();//

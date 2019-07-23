@@ -93,7 +93,7 @@ public class ResponseSafeAgainSignFilter extends ZuulFilter {
             Object recordID = ctx.get(GlobalConstants.RECORD_PRIMARY_KEY);
             Object accessClientIp = ctx.get(GlobalConstants.ACCESS_IP_KEY);
             if (Objects.equals(null, accessClientIp) || Objects.equals(null, recordID))
-                throw new ZtgeoBizZuulException(CodeMsg.FAIL, "访问者IP或记录ID未获取到");
+                throw new ZtgeoBizZuulException(CodeMsg.FAIL, "返回重新加签名过滤器访问者IP或记录ID未获取到");
             //获取redis中userID的key值
             String str = redis.get(USER_REDIS_SESSION +":"+userID);
             if (StringUtils.isBlank(str)){
@@ -108,10 +108,10 @@ public class ResponseSafeAgainSignFilter extends ZuulFilter {
                 //存入Redis
                 redis.set(USER_REDIS_SESSION +":"+userID, setjsonObject.toJSONString());
             }else {
-                JSONObject getjsonObject = JSONObject.parseObject(str);
-                Sign_pt_secret_key=getjsonObject.getString("Sign_pt_secret_key");
+                JSONObject getJsonObject = JSONObject.parseObject(str);
+                Sign_pt_secret_key=getJsonObject.getString("Sign_pt_secret_key");
                 if (StringUtils.isBlank(Sign_pt_secret_key)){
-                    throw new ZtgeoBizRuntimeException(CodeMsg.FAIL, "未查询到请求方密钥信息");
+                    throw new ZtgeoBizRuntimeException(CodeMsg.FAIL, "未查询到返回重新加签名密钥信息");
                 }
             }
             String rspBody = ctx.getResponseBody();
@@ -123,7 +123,7 @@ public class ResponseSafeAgainSignFilter extends ZuulFilter {
                 //重新加载到response中
                 jsonObject.put("sign",sign);
                 String newbody=jsonObject.toString();
-                log.info("入库完成");
+                log.info("返回重新加签名过滤器入库完成");
                 ctx.setResponseBody(newbody);
             }else if(!Objects.equals(null,inputStream)){
                 // 获取返回的body
@@ -134,7 +134,7 @@ public class ResponseSafeAgainSignFilter extends ZuulFilter {
                 String responseBody = StreamUtils.copyToString(inputStreamOld, StandardCharsets.UTF_8);
                 if (Objects.equals(null, responseBody)){
                     responseBody = "";
-                    throw new ZtgeoBizZuulException(CodeMsg.FAIL,"响应报文未获取到");
+                    throw new ZtgeoBizZuulException(CodeMsg.FAIL,"返回安全重新加签过滤器响应报文未获取到");
                 }
                 JSONObject jsonresponseBody = JSON.parseObject(responseBody);
                 String rspEncryptData=jsonresponseBody.get("data").toString();
@@ -145,16 +145,16 @@ public class ResponseSafeAgainSignFilter extends ZuulFilter {
                 jsonresponseBody.put("sign",rspSignData);
                 String newbody=jsonresponseBody.toString();
                 ctx.setResponseBody(newbody);
-                log.info("入库完成");
+                log.info("返回重新加签名过滤器入库完成");
                 ctx.setResponseDataStream(inputStreamNew);
             }else {
-                log.info("记录完成");
+                log.info("返回重新加签名过滤器记录完成");
             }
             ctx.set(GlobalConstants.RECORD_PRIMARY_KEY,recordID);
             ctx.set(GlobalConstants.ACCESS_IP_KEY, accessClientIp);
             return null;
         } catch (ZuulException z) {
-            throw new ZtgeoBizZuulException(z,"post过滤器异常", z.nStatusCode, z.errorCause);
+            throw new ZtgeoBizZuulException(z,"返回重新加签名过滤器Post异常", z.nStatusCode, z.errorCause);
         } catch (Exception s) {
             throw new ZtgeoBizZuulException(s,CodeMsg.AGARSPSIGN_ERROR, "内部异常");
         } finally {

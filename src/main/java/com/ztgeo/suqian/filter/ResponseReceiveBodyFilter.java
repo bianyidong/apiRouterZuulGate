@@ -92,9 +92,9 @@ public class ResponseReceiveBodyFilter extends ZuulFilter {
             log.info("记录完成");
             return null;
         } catch (ZuulException z) {
-            throw new ZtgeoBizZuulException(z, "post过滤器异常", z.nStatusCode, z.errorCause);
+            throw new ZtgeoBizZuulException(z, "post日志过滤器异常", z.nStatusCode, z.errorCause);
         } catch (Exception s) {
-            throw new ZtgeoBizZuulException(s, CodeMsg.FAIL, "内部异常");
+            throw new ZtgeoBizZuulException(s, CodeMsg.FAIL, "post日志过滤器内部异常");
         }
     }
 }

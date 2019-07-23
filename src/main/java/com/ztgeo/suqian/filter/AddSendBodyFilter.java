@@ -118,7 +118,8 @@ public class AddSendBodyFilter extends ZuulFilter {
             return null;
         } catch (Exception e){
             e.printStackTrace();
-            throw new ZtgeoBizZuulException(CodeMsg.FAIL, "内部异常");
+            log.info("请求方日志过滤器异常");
+            throw new ZtgeoBizZuulException(CodeMsg.ADDSENDBODY_EXCEPTION, "内部异常");
         }
     }
     static Object getObject(RequestContext ctx, HttpServletRequest request, String newbody) {

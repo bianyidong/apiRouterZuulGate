@@ -97,7 +97,7 @@ public class ResponseSafeToDataFilter extends ZuulFilter {
             Object recordID = ctx.get(GlobalConstants.RECORD_PRIMARY_KEY);
             Object accessClientIp = ctx.get(GlobalConstants.ACCESS_IP_KEY);
             if (Objects.equals(null, accessClientIp) || Objects.equals(null, recordID))
-                throw new ZtgeoBizZuulException(CodeMsg.FAIL, "访问者IP或记录ID未获取到");
+                throw new ZtgeoBizZuulException(CodeMsg.FAIL, "返回安全解密过滤器访问者IP或记录ID未获取到");
             //获取接收方机构的密钥
             List<ApiBaseInfo> list = apiBaseInfoRepository.findApiBaseInfosByApiIdEquals(apiID);
             ApiBaseInfo apiBaseInfo = list.get(0);
@@ -117,7 +117,7 @@ public class ResponseSafeToDataFilter extends ZuulFilter {
                 JSONObject getjsonObject = JSONObject.parseObject(apiUserID);
                 Symmetric_pubkeyapiUserIDJson = getjsonObject.getString("Symmetric_pubkey");
                 if (StringUtils.isBlank(Symmetric_pubkeyapiUserIDJson)) {
-                    throw new ZtgeoBizRuntimeException(CodeMsg.FAIL, "未查询到请求方密钥信息");
+                    throw new ZtgeoBizRuntimeException(CodeMsg.FAIL, "未查询到返回安全解密密钥信息");
                 }
             }
 
@@ -133,7 +133,7 @@ public class ResponseSafeToDataFilter extends ZuulFilter {
                 jsonObject.put("data", rspDecryptData);
                 jsonObject.put("sign", sign);
                 String newbody = jsonObject.toString();
-                log.info("入库完成");
+                log.info("返回安全解密过滤器入库完成");
                 ctx.setResponseBody(newbody);
             } else if (!Objects.equals(null, inputStream)) {
                 // 获取返回的body
@@ -144,7 +144,7 @@ public class ResponseSafeToDataFilter extends ZuulFilter {
                 String responseBody = StreamUtils.copyToString(inputStreamOld, StandardCharsets.UTF_8);
                 if (Objects.equals(null, responseBody)) {
                     responseBody = "";
-                    throw new ZtgeoBizZuulException(CodeMsg.FAIL, "响应报文未获取到");
+                    throw new ZtgeoBizZuulException(CodeMsg.FAIL, "返回安全解密过滤器响应报文未获取到");
                 }
                 JSONObject jsonresponseBody = JSON.parseObject(responseBody);
                 String rspEncryptData = jsonresponseBody.get("data").toString();
@@ -156,16 +156,16 @@ public class ResponseSafeToDataFilter extends ZuulFilter {
                 jsonresponseBody.put("sign", rspSignData);
                 String newbody = jsonresponseBody.toString();
                 ctx.setResponseBody(newbody);
-                log.info("入库完成");
+                log.info("返回安全解密过滤器入库完成");
                 ctx.setResponseDataStream(inputStreamNew);
             } else {
-                log.info("记录完成");
+                log.info("返回安全解密过滤器记录完成");
             }
             ctx.set(GlobalConstants.RECORD_PRIMARY_KEY,recordID);
             ctx.set(GlobalConstants.ACCESS_IP_KEY, accessClientIp);
             return null;
         } catch (ZuulException z) {
-            throw new ZtgeoBizZuulException(z, "post过滤器异常", z.nStatusCode, z.errorCause);
+            throw new ZtgeoBizZuulException(z, "返回安全解密过滤器post异常", z.nStatusCode, z.errorCause);
         } catch (Exception s) {
             throw new ZtgeoBizZuulException(s, CodeMsg.RSPDATA_ERROR, "内部异常");
         } finally {

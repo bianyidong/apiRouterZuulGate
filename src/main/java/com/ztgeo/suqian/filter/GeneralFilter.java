@@ -33,12 +33,6 @@ GeneralFilter extends ZuulFilter {
     private String api_id;
     @Resource
     private ApiUserFilterRepository apiUserFilterRepository;
-    @Resource
-    private ApiBaseInfoRepository apiBaseInfoRepository;
-    @Autowired
-    private JdbcTemplate jdbcTemplate;
-    @Autowired
-    private MongoClient mongoClient;
     @Value("${customAttributes.dbName}")
     private String dbName; // 存储用户发送数据的数据库名
     /**

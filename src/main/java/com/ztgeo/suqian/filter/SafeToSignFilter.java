@@ -78,7 +78,7 @@ public class SafeToSignFilter extends ZuulFilter {
             String data=jsonObject.get("data").toString();
             String sign=jsonObject.get("sign").toString();
             if (StringUtils.isBlank(data) || StringUtils.isBlank(sign))
-                throw new ZtgeoBizZuulException(CodeMsg.PARAMS_ERROR, "未获取到数据或签名");
+                throw new ZtgeoBizZuulException(CodeMsg.PARAMS_ERROR, "未获取到安全密钥共享平台重新加签验证过滤器数据或签名");
             List<com.ztgeo.suqian.entity.ag_datashare.ApiBaseInfo> list =apiBaseInfoRepository.findApiBaseInfosByApiIdEquals(apiID);
             if (!Objects.equals(null, list) && list.size() != 0) {
                 ApiBaseInfo apiBaseInfo = list.get(0);
@@ -98,12 +98,12 @@ public class SafeToSignFilter extends ZuulFilter {
                     JSONObject getjsonObject = JSONObject.parseObject(apiUserID);
                     Sign_pt_secret_key = getjsonObject.getString("Sign_pt_secret_key");
                     if (StringUtils.isBlank(Sign_pt_secret_key)) {
-                        throw new ZtgeoBizRuntimeException(CodeMsg.FAIL, "未查询到接收方密钥信息");
+                        throw new ZtgeoBizRuntimeException(CodeMsg.FAIL, "未查询到安全密钥共享平台重新加签验证过滤器密钥信息");
                     }
                 }
             }else {
                 log.info("未匹配到注册路由,请求路径");
-                throw new ZtgeoBizZuulException(CodeMsg.NOT_FOUND, "未匹配到注册接口路由");
+                throw new ZtgeoBizZuulException(CodeMsg.NOT_FOUND, "未匹配到安全密钥共享平台重新加签验证过滤器注册接口路由");
             }
             //3.重新加签
             String receiveSign = CryptographyOperation.generateSign(Sign_pt_secret_key, data);

@@ -66,7 +66,7 @@ public class SafefromDataFilter extends ZuulFilter {
             String data=jsonObject.get("data").toString();
             String sign=jsonObject.get("sign").toString();
             if (StringUtils.isBlank(data) || StringUtils.isBlank(sign))
-                throw new ZtgeoBizZuulException(CodeMsg.PARAMS_ERROR, "未获取到数据或签名");
+                throw new ZtgeoBizZuulException(CodeMsg.PARAMS_ERROR, "未获取到安全密钥请求方解密验证过滤器数据或签名");
             //获取redis中的key值
             String str = redis.get(USER_REDIS_SESSION +":"+userID);
             if (StringUtils.isBlank(str)){
@@ -84,7 +84,7 @@ public class SafefromDataFilter extends ZuulFilter {
                 JSONObject getjsonObject = JSONObject.parseObject(str);
                 Symmetric_pubkey=getjsonObject.getString("Symmetric_pubkey");
                 if (StringUtils.isBlank(Symmetric_pubkey)){
-                    throw new ZtgeoBizRuntimeException(CodeMsg.FAIL, "未查询到请求方密钥信息");
+                    throw new ZtgeoBizRuntimeException(CodeMsg.FAIL, "未查询到安全密钥请求方解密验证过滤器密钥信息");
                 }
             }
 

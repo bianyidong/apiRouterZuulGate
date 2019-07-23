@@ -28,7 +28,7 @@ public class NoticeRecord implements Serializable {
     private String receiverUsename;
     @Column(name = "receiver_name")
     private String receiverName;
-    @Column(name = "noticeCode")
+    @Column(name = "notice_Code")
     private String noticeCode;
     @Column(name = "typedesc")
     private String typedesc;

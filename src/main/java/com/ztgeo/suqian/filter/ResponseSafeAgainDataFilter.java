@@ -93,7 +93,7 @@ public class ResponseSafeAgainDataFilter extends ZuulFilter {
             Object recordID = ctx.get(GlobalConstants.RECORD_PRIMARY_KEY);
             Object accessClientIp = ctx.get(GlobalConstants.ACCESS_IP_KEY);
             if (Objects.equals(null, accessClientIp) || Objects.equals(null, recordID))
-                throw new ZtgeoBizZuulException(CodeMsg.FAIL, "访问者IP或记录ID未获取到");
+                throw new ZtgeoBizZuulException(CodeMsg.FAIL, "返回重新加密过滤器访问者IP或记录ID未获取到");
             //获取redis中userID的key值
             String str = redis.get(USER_REDIS_SESSION +":"+userID);
             if (StringUtils.isBlank(str)){
@@ -111,7 +111,7 @@ public class ResponseSafeAgainDataFilter extends ZuulFilter {
                 JSONObject getjsonObject = JSONObject.parseObject(str);
                 Symmetric_pubkey=getjsonObject.getString("Symmetric_pubkey");
                 if (StringUtils.isBlank(Symmetric_pubkey)){
-                    throw new ZtgeoBizRuntimeException(CodeMsg.FAIL, "未查询到请求方密钥信息");
+                    throw new ZtgeoBizRuntimeException(CodeMsg.FAIL, "未查询到返回重新加密密钥信息");
                 }
             }
 
@@ -142,7 +142,7 @@ public class ResponseSafeAgainDataFilter extends ZuulFilter {
                 String responseBody = StreamUtils.copyToString(inputStreamOld, StandardCharsets.UTF_8);
                 if (Objects.equals(null, responseBody)){
                     responseBody = "";
-                    throw new ZtgeoBizZuulException(CodeMsg.FAIL,"响应报文未获取到");
+                    throw new ZtgeoBizZuulException(CodeMsg.FAIL,"返回重新加密响应报文未获取到");
                 }
                 JSONObject jsonresponseBody = JSON.parseObject(responseBody);
                 String rspEncryptData=jsonresponseBody.get("data").toString();
@@ -152,16 +152,16 @@ public class ResponseSafeAgainDataFilter extends ZuulFilter {
                 String newbody=jsonresponseBody.toString();
                 ctx.setResponseBody(newbody);
 
-                log.info("入库完成");
+                log.info("返回重新加密入库完成");
                 ctx.setResponseDataStream(inputStreamNew);
             }else {
-                log.info("记录完成");
+                log.info("返回重新加密记录完成");
             }
             ctx.set(GlobalConstants.RECORD_PRIMARY_KEY,recordID);
             ctx.set(GlobalConstants.ACCESS_IP_KEY, accessClientIp);
             return null;
         } catch (ZuulException z) {
-            throw new ZtgeoBizZuulException(z,"post过滤器异常", z.nStatusCode, z.errorCause);
+            throw new ZtgeoBizZuulException(z,"post重新加密过滤器异常", z.nStatusCode, z.errorCause);
         } catch (Exception s) {
             throw new ZtgeoBizZuulException(s,CodeMsg.AGARSPDATA_ERROR, "内部异常");
         } finally {
