@@ -20,8 +20,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- *  IP地址过滤器
- *  注：此过滤器为白名单过滤器，黑名单过滤器想法不成熟，待添加
+ * IP地址过滤器
+ * 注：此过滤器为白名单过滤器，黑名单过滤器想法不成熟，待添加
  */
 @Component
 public class IPFilter extends ZuulFilter {
@@ -53,12 +53,10 @@ public class IPFilter extends ZuulFilter {
         RequestContext requestContext = RequestContext.getCurrentContext();
         HttpServletRequest httpServletRequest = requestContext.getRequest();
         api_id = httpServletRequest.getHeader("api_id");
-
-        int count = apiUserFilterRepository.countApiUserFiltersByFilterBcEqualsAndApiIdEquals(className,api_id);
-
-        if(count == 0){
+        int count = apiUserFilterRepository.countApiUserFiltersByFilterBcEqualsAndApiIdEquals(className, api_id);
+        if (count == 0) {
             return false;
-        }else{
+        } else {
             isConfig = true;
             return true;
         }
@@ -67,17 +65,17 @@ public class IPFilter extends ZuulFilter {
     @Override
     public Object run() throws ZuulException {
         // 获取请求IP
-        RequestContext ctx= RequestContext.getCurrentContext();
-        HttpServletRequest req=ctx.getRequest();
+        RequestContext ctx = RequestContext.getCurrentContext();
+        HttpServletRequest req = ctx.getRequest();
         String current_ip = this.getIpAddr(req);
         List<ApiIpWhitelistFilter> apiIpWhitelistFilterList = apiIpWhitelistFilterRepository.findApiIpWhitelistFiltersByApiIdEquals(api_id);
-        if(!isConfig){
+        if (!isConfig) {
             log.info("接口未配置IP过滤器！");
-        }else{
-            if(isConfig && apiIpWhitelistFilterList.size() == 0){
+        } else {
+            if (isConfig && apiIpWhitelistFilterList.size() == 0) {
                 log.info("接口已配置IP过滤器，但是没有配置IP，默认全网IP可访问");
-            }else{
-                if(!judgeIPRule(apiIpWhitelistFilterList,current_ip)){
+            } else {
+                if (!judgeIPRule(apiIpWhitelistFilterList, current_ip)) {
                     throw new ZtgeoBizZuulException(CodeMsg.IP_FILTER_ERROR);
                 }
             }
@@ -86,14 +84,14 @@ public class IPFilter extends ZuulFilter {
     }
 
     /**
-     *  判断IP是否符合匹配规则
+     * 判断IP是否符合匹配规则
      */
-    public boolean judgeIPRule(List<ApiIpWhitelistFilter> apiIpWhitelistFilterList,String current_ip){
+    public boolean judgeIPRule(List<ApiIpWhitelistFilter> apiIpWhitelistFilterList, String current_ip) {
         boolean IPBoolean = false;
 
         String[] ipSplits = current_ip.split("\\.");
 
-        for ( ApiIpWhitelistFilter ipWhitelistFilter:apiIpWhitelistFilterList) {
+        for (ApiIpWhitelistFilter ipWhitelistFilter : apiIpWhitelistFilterList) {
 
             String ipConfig = ipWhitelistFilter.getIpContent();
             int startCount = ipConfig.length() - ipConfig.replace("*", "").length();
@@ -136,10 +134,11 @@ public class IPFilter extends ZuulFilter {
 
     /**
      * 获取Ip地址
+     *
      * @param request
      * @return
      */
-    public  String getIpAddr(HttpServletRequest request){
+    public String getIpAddr(HttpServletRequest request) {
 
         String ip = request.getHeader("X-Forwarded-For");
         if (ip == null || ip.length() == 0 || "unknown".equalsIgnoreCase(ip)) {

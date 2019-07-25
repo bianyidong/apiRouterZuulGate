@@ -24,6 +24,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.netflix.zuul.filters.support.FilterConstants;
 import org.springframework.stereotype.Component;
+
 import javax.annotation.Resource;
 import javax.servlet.ServletInputStream;
 import javax.servlet.http.HttpServletRequest;
@@ -34,9 +35,9 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 
-
 /**
  * 请求记录日志过滤器
+ *
  * @author bianyidong
  * @version 2019-7-12
  */
@@ -58,30 +59,29 @@ public class AddSendBodyFilter extends ZuulFilter {
             // 获取request
             RequestContext ctx = RequestContext.getCurrentContext();
             HttpServletRequest request = ctx.getRequest();
-            String url=request.getRequestURI();
-            String sendbody=ctx.get(GlobalConstants.SENDBODY).toString();
+            String url = request.getRequestURI();
+            String sendbody = ctx.get(GlobalConstants.SENDBODY).toString();
             log.info("访问者IP:{}", HttpUtils.getIpAdrress(request));
             //1.获取heard中的userID和ApiID
             String apiID;
             String userID;
-            String reqapiID=request.getHeader("api_id");
-            String requserID=request.getHeader("from_user");
-
-            if(StringUtils.isEmpty(reqapiID)||StringUtils.isEmpty(requserID)){
+            String reqapiID = request.getHeader("api_id");
+            String requserID = request.getHeader("from_user");
+            if (StringUtils.isEmpty(reqapiID) || StringUtils.isEmpty(requserID)) {
                 String ctxApiId = ctx.get("api_id").toString();
                 String ctxFromUser = ctx.get("from_user").toString();
-                if(StringUtils.isEmpty(ctxApiId)){
+                if (StringUtils.isEmpty(ctxApiId)) {
                     throw new ZtgeoBizZuulException(CodeMsg.GETNULL_ERROR);
-                }else{
+                } else {
                     apiID = ctxApiId;
                     userID = ctxFromUser;
                 }
-            }else{
+            } else {
                 apiID = reqapiID;
                 userID = requserID;
             }
-            List<ApiBaseInfo> list =apiBaseInfoRepository.findApiBaseInfosByApiIdEquals(apiID);
-            ApiBaseInfo apiBaseInfo=list.get(0);
+            List<ApiBaseInfo> list = apiBaseInfoRepository.findApiBaseInfosByApiIdEquals(apiID);
+            ApiBaseInfo apiBaseInfo = list.get(0);
             //3.相关信息存入到mongodb中,有待完善日志
             CodecRegistry pojoCodecRegistry = CodecRegistries.fromRegistries(MongoClient.getDefaultCodecRegistry(),
                     CodecRegistries.fromProviders(PojoCodecProvider.builder().automatic(true).build()));
@@ -89,7 +89,7 @@ public class AddSendBodyFilter extends ZuulFilter {
             MongoCollection<HttpEntity> collection = mongoDB.getCollection(userID + "_record", HttpEntity.class);
             //封装参数
             HttpEntity httpEntity = new HttpEntity();
-            String id= com.ztgeo.suqian.utils.StringUtils.getShortUUID();
+            String id = com.ztgeo.suqian.utils.StringUtils.getShortUUID();
             httpEntity.setID(id);
             httpEntity.setSendUserID(userID);
             httpEntity.setApiID(apiID);
@@ -112,27 +112,30 @@ public class AddSendBodyFilter extends ZuulFilter {
             httpEntity.setCurrentTime(Instant.now().getEpochSecond());
             // 封装body
             collection.insertOne(httpEntity);
-            ctx.set(GlobalConstants.RECORD_PRIMARY_KEY,id);
+            ctx.set(GlobalConstants.RECORD_PRIMARY_KEY, id);
             ctx.set(GlobalConstants.ACCESS_IP_KEY, accessClientIp);
-           // return getObject(ctx,request,sendbody);
+            // return getObject(ctx,request,sendbody);
             return null;
-        } catch (Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
             log.info("请求方日志过滤器异常");
             throw new ZtgeoBizZuulException(CodeMsg.ADDSENDBODY_EXCEPTION, "内部异常");
         }
     }
+
     static Object getObject(RequestContext ctx, HttpServletRequest request, String newbody) {
         final byte[] reqBodyBytes = newbody.getBytes();
-        ctx.setRequest(new HttpServletRequestWrapper(request){
+        ctx.setRequest(new HttpServletRequestWrapper(request) {
             @Override
             public ServletInputStream getInputStream() throws IOException {
                 return new ServletInputStreamWrapper(reqBodyBytes);
             }
+
             @Override
             public int getContentLength() {
                 return reqBodyBytes.length;
             }
+
             @Override
             public long getContentLengthLong() {
                 return reqBodyBytes.length;
@@ -140,10 +143,12 @@ public class AddSendBodyFilter extends ZuulFilter {
         });
         return null;
     }
+
     @Override
     public boolean shouldFilter() {
-            return true;
+        return true;
     }
+
     @Override
     public int filterOrder() {
         return 5;

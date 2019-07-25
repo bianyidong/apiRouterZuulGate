@@ -55,7 +55,7 @@ public class HttpOperation {
                     .readTimeout(30, TimeUnit.SECONDS)
                     .build();
             RequestBody requestBody = FormBody.create(MediaType.parse("application/json; charset=utf-8")
-                    , data);
+                    , data);//发送的数据
             Request request = new Request.Builder()
                     .url(url)//请求的url
                     .post(requestBody)
