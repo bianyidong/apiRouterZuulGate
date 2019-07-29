@@ -10,8 +10,10 @@ import com.ztgeo.suqian.common.GlobalConstants;
 import com.ztgeo.suqian.common.ZtgeoBizRuntimeException;
 import com.ztgeo.suqian.common.ZtgeoBizZuulException;
 import com.ztgeo.suqian.config.RedisOperator;
+import com.ztgeo.suqian.entity.ag_datashare.ApiJgtoPtFilter;
 import com.ztgeo.suqian.entity.ag_datashare.UserKeyInfo;
 import com.ztgeo.suqian.msg.CodeMsg;
+import com.ztgeo.suqian.repository.ApiJgtoPtFilterRepository;
 import com.ztgeo.suqian.repository.ApiUserFilterRepository;
 import com.ztgeo.suqian.repository.UserKeyInfoRepository;
 import com.ztgeo.suqian.utils.StreamOperateUtils;
@@ -43,8 +45,11 @@ import static com.ztgeo.suqian.common.GlobalConstants.USER_REDIS_SESSION;
 public class ResponseSafeAgainDataFilter extends ZuulFilter {
 
     private static Logger log = LoggerFactory.getLogger(ResponseSafeAgainDataFilter.class);
-    private String api_id;
+    private String from_user;
     private String Symmetric_pubkey;
+    private  String uri;
+    @Resource
+    private ApiJgtoPtFilterRepository apiJgtoPtFilterRepository;
     @Resource
     private UserKeyInfoRepository userKeyInfoRepository;
     @Resource
@@ -68,8 +73,9 @@ public class ResponseSafeAgainDataFilter extends ZuulFilter {
         String className = this.getClass().getSimpleName();
         RequestContext ctx = RequestContext.getCurrentContext();
         HttpServletRequest request = ctx.getRequest();
-        api_id=request.getHeader("api_id");
-        int count = apiUserFilterRepository.countApiUserFiltersByFilterBcEqualsAndApiIdEquals(className,api_id);
+        from_user=request.getHeader("from_user");
+        uri = request.getRequestURI();
+        int count = apiJgtoPtFilterRepository.countApiJgtoPtFilterByFromUserAndUriAndFilterBc(from_user,uri,className);
         if (count>0){
             return true;
         }else {
@@ -95,25 +101,27 @@ public class ResponseSafeAgainDataFilter extends ZuulFilter {
             if (Objects.equals(null, accessClientIp) || Objects.equals(null, recordID))
                 throw new ZtgeoBizZuulException(CodeMsg.FAIL, "返回重新加密过滤器访问者IP或记录ID未获取到");
             //获取redis中userID的key值
-            String str = redis.get(USER_REDIS_SESSION +":"+userID);
-            if (StringUtils.isBlank(str)){
-                UserKeyInfo userKeyInfo=userKeyInfoRepository.findByUserRealIdEquals(userID);
-                Symmetric_pubkey=userKeyInfo.getSymmetricPubkey();
-                JSONObject setjsonObject = new JSONObject();
-                setjsonObject.put("Symmetric_pubkey",userKeyInfo.getSymmetricPubkey());
-                setjsonObject.put("Sign_secret_key", userKeyInfo.getSignSecretKey());
-                setjsonObject.put("Sign_pub_key",userKeyInfo.getSignPubKey());
-                setjsonObject.put("Sign_pt_secret_key",userKeyInfo.getSignPtSecretKey());
-                setjsonObject.put("Sign_pt_pub_key",userKeyInfo.getSignPtPubKey());
-                //存入Redis
-                redis.set(USER_REDIS_SESSION +":"+userID, setjsonObject.toJSONString());
-            }else {
-                JSONObject getjsonObject = JSONObject.parseObject(str);
-                Symmetric_pubkey=getjsonObject.getString("Symmetric_pubkey");
-                if (StringUtils.isBlank(Symmetric_pubkey)){
-                    throw new ZtgeoBizRuntimeException(CodeMsg.FAIL, "未查询到返回重新加密密钥信息");
-                }
-            }
+//            String str = redis.get(USER_REDIS_SESSION +":"+userID);
+//            if (StringUtils.isBlank(str)){
+//                UserKeyInfo userKeyInfo=userKeyInfoRepository.findByUserRealIdEquals(userID);
+//                Symmetric_pubkey=userKeyInfo.getSymmetricPubkey();
+//                JSONObject setjsonObject = new JSONObject();
+//                setjsonObject.put("Symmetric_pubkey",userKeyInfo.getSymmetricPubkey());
+//                setjsonObject.put("Sign_secret_key", userKeyInfo.getSignSecretKey());
+//                setjsonObject.put("Sign_pub_key",userKeyInfo.getSignPubKey());
+//                setjsonObject.put("Sign_pt_secret_key",userKeyInfo.getSignPtSecretKey());
+//                setjsonObject.put("Sign_pt_pub_key",userKeyInfo.getSignPtPubKey());
+//                //存入Redis
+//                redis.set(USER_REDIS_SESSION +":"+userID, setjsonObject.toJSONString());
+//            }else {
+//                JSONObject getjsonObject = JSONObject.parseObject(str);
+//                Symmetric_pubkey=getjsonObject.getString("Symmetric_pubkey");
+//                if (StringUtils.isBlank(Symmetric_pubkey)){
+//                    throw new ZtgeoBizRuntimeException(CodeMsg.FAIL, "未查询到返回重新加密密钥信息");
+//                }
+//            }
+            ApiJgtoPtFilter apiJgtoPtFilter =apiJgtoPtFilterRepository.queryApiJgtoPtFilterByFromUserAndUriAndFilterBc(userID,uri);
+            Symmetric_pubkey=apiJgtoPtFilter.getSymPubkey();
 
             String rspBody = ctx.getResponseBody();
 

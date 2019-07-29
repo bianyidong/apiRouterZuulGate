@@ -11,6 +11,6 @@ public interface ApiBaseInfoRepository extends CrudRepository<ApiBaseInfo,String
     int countApiBaseInfosByApiIdEquals(String api_id);
     List<ApiBaseInfo> findApiBaseInfosByApiIdEquals(String api_id);
 
-//    @Query(value = "select * from dj_sjd left join dj_djb where qlrmc = ? and zjhm = ?",nativeQuery = true)
-//    int queryPersonbdcinfobyzjhm(String idd,String sdjfs);
+    @Query(value = "SELECT * FROM api_base_info where api_id=?",nativeQuery = true)
+    ApiBaseInfo queryApiBaseInfoByApiId(String ApiId);
 }

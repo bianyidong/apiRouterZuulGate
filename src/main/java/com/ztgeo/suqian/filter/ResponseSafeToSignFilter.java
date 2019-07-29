@@ -97,27 +97,29 @@ public class ResponseSafeToSignFilter extends ZuulFilter {
             if (Objects.equals(null, accessClientIp) || Objects.equals(null, recordID))
                 throw new ZtgeoBizZuulException(CodeMsg.FAIL, "返回安全验签过滤器访问者IP或记录ID未获取到");
             //获取接收方机构的密钥
-            List<ApiBaseInfo> list =apiBaseInfoRepository.findApiBaseInfosByApiIdEquals(apiID);
-            ApiBaseInfo apiBaseInfo=list.get(0);
-            String apiUserID = redis.get(USER_REDIS_SESSION +":"+apiBaseInfo.getApiOwnerId());
-            if (StringUtils.isBlank(apiUserID)){
-                UserKeyInfo userKeyInfo=userKeyInfoRepository.findByUserRealIdEquals(apiBaseInfo.getApiOwnerId());
-                Sign_pub_keyapiUserIDJson=userKeyInfo.getSignPubKey();
-                JSONObject setjsonObject = new JSONObject();
-                setjsonObject.put("Symmetric_pubkey",userKeyInfo.getSymmetricPubkey());
-                setjsonObject.put("Sign_secret_key", userKeyInfo.getSignSecretKey());
-                setjsonObject.put("Sign_pub_key",userKeyInfo.getSignPubKey());
-                setjsonObject.put("Sign_pt_secret_key",userKeyInfo.getSignPtSecretKey());
-                setjsonObject.put("Sign_pt_pub_key",userKeyInfo.getSignPtPubKey());
-                //存入Redis
-                redis.set(USER_REDIS_SESSION +":"+apiBaseInfo.getApiOwnerId(), setjsonObject.toJSONString());
-            }else {
-                JSONObject getjsonObject = JSONObject.parseObject(apiUserID);
-                Sign_pub_keyapiUserIDJson=getjsonObject.getString("Sign_pub_key");
-                if (StringUtils.isBlank(Sign_pub_keyapiUserIDJson)){
-                    throw new ZtgeoBizRuntimeException(CodeMsg.FAIL, "未查询到返回安全验签过滤器密钥信息");
-                }
-            }
+//            List<ApiBaseInfo> list =apiBaseInfoRepository.findApiBaseInfosByApiIdEquals(apiID);
+//            ApiBaseInfo apiBaseInfo=list.get(0);
+//            String apiUserID = redis.get(USER_REDIS_SESSION +":"+apiBaseInfo.getApiOwnerId());
+//            if (StringUtils.isBlank(apiUserID)){
+//                UserKeyInfo userKeyInfo=userKeyInfoRepository.findByUserRealIdEquals(apiBaseInfo.getApiOwnerId());
+//                Sign_pub_keyapiUserIDJson=userKeyInfo.getSignPubKey();
+//                JSONObject setjsonObject = new JSONObject();
+//                setjsonObject.put("Symmetric_pubkey",userKeyInfo.getSymmetricPubkey());
+//                setjsonObject.put("Sign_secret_key", userKeyInfo.getSignSecretKey());
+//                setjsonObject.put("Sign_pub_key",userKeyInfo.getSignPubKey());
+//                setjsonObject.put("Sign_pt_secret_key",userKeyInfo.getSignPtSecretKey());
+//                setjsonObject.put("Sign_pt_pub_key",userKeyInfo.getSignPtPubKey());
+//                //存入Redis
+//                redis.set(USER_REDIS_SESSION +":"+apiBaseInfo.getApiOwnerId(), setjsonObject.toJSONString());
+//            }else {
+//                JSONObject getjsonObject = JSONObject.parseObject(apiUserID);
+//                Sign_pub_keyapiUserIDJson=getjsonObject.getString("Sign_pub_key");
+//                if (StringUtils.isBlank(Sign_pub_keyapiUserIDJson)){
+//                    throw new ZtgeoBizRuntimeException(CodeMsg.FAIL, "未查询到返回安全验签过滤器密钥信息");
+//                }
+//            }
+            ApiBaseInfo apiBaseInfo=apiBaseInfoRepository.queryApiBaseInfoByApiId(apiID);
+            Sign_pub_keyapiUserIDJson=apiBaseInfo.getSignPubKey();
             String rspBody = ctx.getResponseBody();
             if(!Objects.equals(null,rspBody)){
                 JSONObject jsonObject = JSON.parseObject(rspBody);

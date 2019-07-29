@@ -15,6 +15,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.netflix.zuul.filters.support.FilterConstants;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StreamUtils;
+
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import java.io.*;
@@ -54,11 +55,11 @@ public class ResponseFilter extends ZuulFilter {
         String className = this.getClass().getSimpleName();
         RequestContext ctx = RequestContext.getCurrentContext();
         HttpServletRequest request = ctx.getRequest();
-        api_id=request.getHeader("api_id");
-        int count = apiUserFilterRepository.countApiUserFiltersByFilterBcEqualsAndApiIdEquals(className,api_id);
-        if (count>0){
+        api_id = request.getHeader("api_id");
+        int count = apiUserFilterRepository.countApiUserFiltersByFilterBcEqualsAndApiIdEquals(className, api_id);
+        if (count > 0) {
             return true;
-        }else {
+        } else {
             return false;
         }
     }
@@ -78,8 +79,11 @@ public class ResponseFilter extends ZuulFilter {
             Object accessClientIp = ctx.get(GlobalConstants.ACCESS_IP_KEY);
             if (Objects.equals(null, accessClientIp) || Objects.equals(null, recordID))
                 throw new ZtgeoBizZuulException(CodeMsg.FAIL, "post通用过滤器访问者IP或记录ID未获取到");
+//            if ("text/xml".equals(ContentType)) {
+//                log.info("请求为text/xml，返回日志不操作");
+//                return null;
+//            }
             if (!Objects.equals(null, inputStream)) {
-                System.out.println(inputStream.available());
                 // 获取返回的body
                 ByteArrayOutputStream byteArrayOutputStream = StreamOperateUtils.cloneInputStreamToByteArray(inputStream);
                 inputStreamOld = new ByteArrayInputStream(byteArrayOutputStream.toByteArray()); // 原始流
@@ -100,7 +104,7 @@ public class ResponseFilter extends ZuulFilter {
                 log.info("未接收到返回的任何数据,记录ID:{}", recordID);
 
             }
-            ctx.set(GlobalConstants.RECORD_PRIMARY_KEY,recordID);
+            ctx.set(GlobalConstants.RECORD_PRIMARY_KEY, recordID);
             ctx.set(GlobalConstants.ACCESS_IP_KEY, accessClientIp);
             return null;
         } catch (ZuulException z) {

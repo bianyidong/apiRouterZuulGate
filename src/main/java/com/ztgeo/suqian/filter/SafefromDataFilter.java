@@ -10,8 +10,10 @@ import com.ztgeo.suqian.common.GlobalConstants;
 import com.ztgeo.suqian.common.ZtgeoBizRuntimeException;
 import com.ztgeo.suqian.common.ZtgeoBizZuulException;
 import com.ztgeo.suqian.config.RedisOperator;
+import com.ztgeo.suqian.entity.ag_datashare.ApiJgtoPtFilter;
 import com.ztgeo.suqian.entity.ag_datashare.UserKeyInfo;
 import com.ztgeo.suqian.msg.CodeMsg;
+import com.ztgeo.suqian.repository.ApiJgtoPtFilterRepository;
 import com.ztgeo.suqian.repository.ApiUserFilterRepository;
 import com.ztgeo.suqian.repository.UserKeyInfoRepository;
 import com.ztgeo.suqian.utils.HttpUtils;
@@ -39,12 +41,13 @@ import static com.ztgeo.suqian.filter.AddSendBodyFilter.getObject;
 public class SafefromDataFilter extends ZuulFilter {
 
     private static Logger log = LoggerFactory.getLogger(SafefromDataFilter.class);
-    private String api_id;
+    private String from_user;
     private String Symmetric_pubkey;
+    private String uri;
     @Resource
     private UserKeyInfoRepository userKeyInfoRepository;
     @Resource
-    private ApiUserFilterRepository apiUserFilterRepository;
+    private ApiJgtoPtFilterRepository apiJgtoPtFilterRepository;
     @Autowired
     private RedisOperator redis;
 
@@ -68,26 +71,27 @@ public class SafefromDataFilter extends ZuulFilter {
             if (StringUtils.isBlank(data) || StringUtils.isBlank(sign))
                 throw new ZtgeoBizZuulException(CodeMsg.PARAMS_ERROR, "未获取到安全密钥请求方解密验证过滤器数据或签名");
             //获取redis中的key值
-            String str = redis.get(USER_REDIS_SESSION +":"+userID);
-            if (StringUtils.isBlank(str)){
-                UserKeyInfo userKeyInfo=userKeyInfoRepository.findByUserRealIdEquals(userID);
-                Symmetric_pubkey=userKeyInfo.getSymmetricPubkey();
-                JSONObject setjsonObject = new JSONObject();
-                setjsonObject.put("Symmetric_pubkey",userKeyInfo.getSymmetricPubkey());
-                setjsonObject.put("Sign_secret_key", userKeyInfo.getSignSecretKey());
-                setjsonObject.put("Sign_pub_key",userKeyInfo.getSignPubKey());
-                setjsonObject.put("Sign_pt_secret_key",userKeyInfo.getSignPtSecretKey());
-                setjsonObject.put("Sign_pt_pub_key",userKeyInfo.getSignPtPubKey());
-                //存入Redis
-                redis.set(USER_REDIS_SESSION +":"+userID, setjsonObject.toJSONString());
-            }else {
-                JSONObject getjsonObject = JSONObject.parseObject(str);
-                Symmetric_pubkey=getjsonObject.getString("Symmetric_pubkey");
-                if (StringUtils.isBlank(Symmetric_pubkey)){
-                    throw new ZtgeoBizRuntimeException(CodeMsg.FAIL, "未查询到安全密钥请求方解密验证过滤器密钥信息");
-                }
-            }
-
+//            String str = redis.get(USER_REDIS_SESSION +":"+userID);
+//            if (StringUtils.isBlank(str)){
+//                UserKeyInfo userKeyInfo=userKeyInfoRepository.findByUserRealIdEquals(userID);
+//                Symmetric_pubkey=userKeyInfo.getSymmetricPubkey();
+//                JSONObject setjsonObject = new JSONObject();
+//                setjsonObject.put("Symmetric_pubkey",userKeyInfo.getSymmetricPubkey());
+//                setjsonObject.put("Sign_secret_key", userKeyInfo.getSignSecretKey());
+//                setjsonObject.put("Sign_pub_key",userKeyInfo.getSignPubKey());
+//                setjsonObject.put("Sign_pt_secret_key",userKeyInfo.getSignPtSecretKey());
+//                setjsonObject.put("Sign_pt_pub_key",userKeyInfo.getSignPtPubKey());
+//                //存入Redis
+//                redis.set(USER_REDIS_SESSION +":"+userID, setjsonObject.toJSONString());
+//            }else {
+//                JSONObject getjsonObject = JSONObject.parseObject(str);
+//                Symmetric_pubkey=getjsonObject.getString("Symmetric_pubkey");
+//                if (StringUtils.isBlank(Symmetric_pubkey)){
+//                    throw new ZtgeoBizRuntimeException(CodeMsg.FAIL, "未查询到安全密钥请求方解密验证过滤器密钥信息");
+//                }
+//            }
+            ApiJgtoPtFilter apiJgtoPtFilter =apiJgtoPtFilterRepository.queryApiJgtoPtFilterByFromUserAndUriAndFilterBc(userID,uri);
+            Symmetric_pubkey=apiJgtoPtFilter.getSymPubkey();
             // 解密数据
             String reqDecryptData = CryptographyOperation.aesDecrypt(Symmetric_pubkey, data);
             //重新加载到requset中
@@ -113,8 +117,9 @@ public class SafefromDataFilter extends ZuulFilter {
         String className = this.getClass().getSimpleName();
         RequestContext ctx = RequestContext.getCurrentContext();
         HttpServletRequest request = ctx.getRequest();
-        api_id=request.getHeader("api_id");
-        int count = apiUserFilterRepository.countApiUserFiltersByFilterBcEqualsAndApiIdEquals(className,api_id);
+        from_user=request.getHeader("from_user");
+        uri = request.getRequestURI();
+        int count = apiJgtoPtFilterRepository.countApiJgtoPtFilterByFromUserAndUriAndFilterBc(from_user,uri,className);
         if (count>0){
             return true;
         }else {

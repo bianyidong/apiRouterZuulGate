@@ -18,7 +18,7 @@ import java.util.List;
 
 import static com.ztgeo.suqian.common.GlobalConstants.USER_REDIS_SESSION;
 
-@Component
+//@Component
 @Order(1)
 public class initUserKeys implements CommandLineRunner {
     private Logger log = LoggerFactory.getLogger(initUserKeys.class);

@@ -26,6 +26,16 @@ public class ApiBaseInfo implements Serializable {
     private String baseUrl;
     @Column(name = "path")
     private String path;
+    @Column(name = "symmetric_pubkey")
+    private String symmetricPubkey;
+    @Column(name = "sign_secret_key")
+    private String signSecretKey;
+    @Column(name = "sign_pub_key")
+    private String signPubKey;
+    @Column(name = "sign_pt_secret_key")
+    private String signPtSecretKey;
+    @Column(name = "sign_pt_pub_key")
+    private String signPtPubKey;
     @Column(name = "method")
     private String method;
     @Column(name = "enabled_status")

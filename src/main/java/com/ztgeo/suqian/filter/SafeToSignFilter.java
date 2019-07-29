@@ -79,32 +79,34 @@ public class SafeToSignFilter extends ZuulFilter {
             String sign=jsonObject.get("sign").toString();
             if (StringUtils.isBlank(data) || StringUtils.isBlank(sign))
                 throw new ZtgeoBizZuulException(CodeMsg.PARAMS_ERROR, "未获取到安全密钥共享平台重新加签验证过滤器数据或签名");
-            List<com.ztgeo.suqian.entity.ag_datashare.ApiBaseInfo> list =apiBaseInfoRepository.findApiBaseInfosByApiIdEquals(apiID);
-            if (!Objects.equals(null, list) && list.size() != 0) {
-                ApiBaseInfo apiBaseInfo = list.get(0);
-                String apiUserID = redis.get(USER_REDIS_SESSION + ":" + apiBaseInfo.getApiOwnerId());
-                if (StringUtils.isBlank(apiUserID)) {
-                    UserKeyInfo userKeyInfo = userKeyInfoRepository.findByUserRealIdEquals(apiBaseInfo.getApiOwnerId());
-                    Sign_pt_secret_key = userKeyInfo.getSymmetricPubkey();
-                    JSONObject setjsonObject = new JSONObject();
-                    setjsonObject.put("Symmetric_pubkey", userKeyInfo.getSymmetricPubkey());
-                    setjsonObject.put("Sign_secret_key", userKeyInfo.getSignSecretKey());
-                    setjsonObject.put("Sign_pub_key", userKeyInfo.getSignPubKey());
-                    setjsonObject.put("Sign_pt_secret_key", userKeyInfo.getSignPtSecretKey());
-                    setjsonObject.put("Sign_pt_pub_key", userKeyInfo.getSignPtPubKey());
-                    //存入Redis
-                    redis.set(USER_REDIS_SESSION + ":" + apiBaseInfo.getApiOwnerId(), setjsonObject.toJSONString());
-                } else {
-                    JSONObject getjsonObject = JSONObject.parseObject(apiUserID);
-                    Sign_pt_secret_key = getjsonObject.getString("Sign_pt_secret_key");
-                    if (StringUtils.isBlank(Sign_pt_secret_key)) {
-                        throw new ZtgeoBizRuntimeException(CodeMsg.FAIL, "未查询到安全密钥共享平台重新加签验证过滤器密钥信息");
-                    }
-                }
-            }else {
-                log.info("未匹配到注册路由,请求路径");
-                throw new ZtgeoBizZuulException(CodeMsg.NOT_FOUND, "未匹配到安全密钥共享平台重新加签验证过滤器注册接口路由");
-            }
+//            List<com.ztgeo.suqian.entity.ag_datashare.ApiBaseInfo> list =apiBaseInfoRepository.findApiBaseInfosByApiIdEquals(apiID);
+//            if (!Objects.equals(null, list) && list.size() != 0) {
+//                ApiBaseInfo apiBaseInfo = list.get(0);
+//                String apiUserID = redis.get(USER_REDIS_SESSION + ":" + apiBaseInfo.getApiOwnerId());
+//                if (StringUtils.isBlank(apiUserID)) {
+//                    UserKeyInfo userKeyInfo = userKeyInfoRepository.findByUserRealIdEquals(apiBaseInfo.getApiOwnerId());
+//                    Sign_pt_secret_key = userKeyInfo.getSymmetricPubkey();
+//                    JSONObject setjsonObject = new JSONObject();
+//                    setjsonObject.put("Symmetric_pubkey", userKeyInfo.getSymmetricPubkey());
+//                    setjsonObject.put("Sign_secret_key", userKeyInfo.getSignSecretKey());
+//                    setjsonObject.put("Sign_pub_key", userKeyInfo.getSignPubKey());
+//                    setjsonObject.put("Sign_pt_secret_key", userKeyInfo.getSignPtSecretKey());
+//                    setjsonObject.put("Sign_pt_pub_key", userKeyInfo.getSignPtPubKey());
+//                    //存入Redis
+//                    redis.set(USER_REDIS_SESSION + ":" + apiBaseInfo.getApiOwnerId(), setjsonObject.toJSONString());
+//                } else {
+//                    JSONObject getjsonObject = JSONObject.parseObject(apiUserID);
+//                    Sign_pt_secret_key = getjsonObject.getString("Sign_pt_secret_key");
+//                    if (StringUtils.isBlank(Sign_pt_secret_key)) {
+//                        throw new ZtgeoBizRuntimeException(CodeMsg.FAIL, "未查询到安全密钥共享平台重新加签验证过滤器密钥信息");
+//                    }
+//                }
+//            }else {
+//                log.info("未匹配到注册路由,请求路径");
+//                throw new ZtgeoBizZuulException(CodeMsg.NOT_FOUND, "未匹配到安全密钥共享平台重新加签验证过滤器注册接口路由");
+//            }
+            ApiBaseInfo apiBaseInfo=apiBaseInfoRepository.queryApiBaseInfoByApiId(apiID);
+            Sign_pt_secret_key=apiBaseInfo.getSignPtSecretKey();
             //3.重新加签
             String receiveSign = CryptographyOperation.generateSign(Sign_pt_secret_key, data);
             //4.重新加载到requset中
