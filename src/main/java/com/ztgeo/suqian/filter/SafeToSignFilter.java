@@ -77,7 +77,7 @@ public class SafeToSignFilter extends ZuulFilter {
             JSONObject jsonObject = JSON.parseObject(body);
             String data=jsonObject.get("data").toString();
             String sign=jsonObject.get("sign").toString();
-            if (StringUtils.isBlank(data) || StringUtils.isBlank(sign))
+            if (StringUtils.isBlank(data) && StringUtils.isBlank(sign))
                 throw new ZtgeoBizZuulException(CodeMsg.PARAMS_ERROR, "未获取到安全密钥共享平台重新加签验证过滤器数据或签名");
 //            List<com.ztgeo.suqian.entity.ag_datashare.ApiBaseInfo> list =apiBaseInfoRepository.findApiBaseInfosByApiIdEquals(apiID);
 //            if (!Objects.equals(null, list) && list.size() != 0) {
@@ -144,7 +144,7 @@ public class SafeToSignFilter extends ZuulFilter {
 
     @Override
     public String filterType() {
-        return FilterConstants.ROUTE_TYPE;
+        return FilterConstants.PRE_TYPE;
     }
 
 

@@ -136,7 +136,7 @@ public class SafefromSignFilter extends ZuulFilter {
 
     @Override
     public String filterType() {
-        return FilterConstants.ROUTE_TYPE;
+        return FilterConstants.PRE_TYPE;
     }
 
 

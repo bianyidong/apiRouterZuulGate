@@ -9,6 +9,7 @@ import com.ztgeo.suqian.msg.CodeMsg;
 import com.ztgeo.suqian.repository.ApiTimeFilterRepository;
 import com.ztgeo.suqian.repository.ApiUserFilterRepository;
 import com.ztgeo.suqian.utils.TimeCheckUtils;
+import org.springframework.cloud.netflix.zuul.filters.support.FilterConstants;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
@@ -36,7 +37,7 @@ public class TimeFilter extends ZuulFilter {
 
     @Override
     public String filterType() {
-        return "pre";
+        return FilterConstants.PRE_TYPE;
     }
 
     @Override

@@ -151,12 +151,14 @@ public class NoticeController {
                         .build();
                 Call call = okHttpClient.newCall(requestHttp);
                 call.enqueue(new Callback() {
+                    //请求失败执行的方法
                     @Override
                     public void onFailure(Call call, IOException e) {
                         e.printStackTrace();
                         // 数据
                         noticeRecordRepository.save(new NoticeRecord(id,userID,receiverId,url,receiverName,name,noticeCode,typedesc,1,currentTime,0,sendStr));
                     }
+                    //请求成功执行的方法
                     @Override
                     public void onResponse(Call call, Response response) throws IOException {
                         response.body().string();//

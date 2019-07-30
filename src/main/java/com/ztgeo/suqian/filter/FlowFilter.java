@@ -8,6 +8,7 @@ import com.ztgeo.suqian.entity.ag_datashare.ApiFlowConfigRepository;
 import com.ztgeo.suqian.entity.ag_datashare.ApiFlowInst;
 import com.ztgeo.suqian.entity.ag_datashare.ApiFlowInstRepository;
 import com.ztgeo.suqian.utils.StreamOperateUtils;
+import org.springframework.cloud.netflix.zuul.filters.support.FilterConstants;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
@@ -30,7 +31,7 @@ public class FlowFilter extends ZuulFilter {
 
     @Override
     public String filterType() {
-        return "pre";
+        return FilterConstants.PRE_TYPE;
     }
 
     @Override
@@ -53,8 +54,6 @@ public class FlowFilter extends ZuulFilter {
             //String apiId = httpServletRequest.getHeader("api_id");
             String apiId = "1h5OiYUA";
             String ip = getRealIP(httpServletRequest);
-
-
             // 判断逻辑
             ApiFlowConfig apiFlowConfig = apiFlowConfigRepository.findApiFlowConfigsByApiIdEquals(apiId);
 

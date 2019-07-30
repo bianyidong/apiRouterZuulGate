@@ -98,9 +98,7 @@ public class SafefromDataFilter extends ZuulFilter {
             jsonObject.put("data",reqDecryptData);
             jsonObject.put("sign",sign);
             String newbody=jsonObject.toString();
-
             ctx.set(GlobalConstants.SENDBODY, newbody);
-
            return getObject(ctx, request, newbody);
 
         } catch (ZuulException z) {
@@ -133,7 +131,7 @@ public class SafefromDataFilter extends ZuulFilter {
 
     @Override
     public String filterType() {
-        return FilterConstants.ROUTE_TYPE;
+        return FilterConstants.PRE_TYPE;
     }
 
 

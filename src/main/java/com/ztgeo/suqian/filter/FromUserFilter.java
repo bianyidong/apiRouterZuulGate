@@ -51,9 +51,7 @@ public class FromUserFilter extends ZuulFilter {
         RequestContext requestContext = RequestContext.getCurrentContext();
         HttpServletRequest httpServletRequest = requestContext.getRequest();
         api_id = httpServletRequest.getHeader("api_id");
-
         int count = apiUserFilterRepository.countApiUserFiltersByFilterBcEqualsAndApiIdEquals(className,api_id);
-
         if(count == 0){
             return false;
         }else{

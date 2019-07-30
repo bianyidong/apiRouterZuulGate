@@ -7,16 +7,15 @@ import com.netflix.zuul.exception.ZuulException;
 import com.ztgeo.suqian.common.GlobalConstants;
 import com.ztgeo.suqian.common.ZtgeoBizZuulException;
 import com.ztgeo.suqian.msg.CodeMsg;
-import com.ztgeo.suqian.repository.ApiBaseInfoRepository;
 import com.ztgeo.suqian.repository.ApiUserFilterRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.netflix.zuul.filters.support.FilterConstants;
-import org.springframework.jdbc.core.JdbcTemplate;
+
 import org.springframework.stereotype.Component;
 import org.springframework.util.StreamUtils;
+
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
@@ -35,19 +34,21 @@ GeneralFilter extends ZuulFilter {
     private ApiUserFilterRepository apiUserFilterRepository;
     @Value("${customAttributes.dbName}")
     private String dbName; // 存储用户发送数据的数据库名
+
     /**
      * 过滤器的类型
+     *
      * @return
      */
     @Override
     public String filterType() {
-        return FilterConstants.ROUTE_TYPE;
+        return FilterConstants.PRE_TYPE;
     }
-
 
 
     /**
      * 通过int值来定义过滤器的执行顺序，数值越小优先级越高。
+     *
      * @return
      */
     @Override
@@ -57,6 +58,7 @@ GeneralFilter extends ZuulFilter {
 
     /**
      * 返回一个boolean值来判断该过滤器是否要执行
+     *
      * @return
      */
     @Override
@@ -64,14 +66,13 @@ GeneralFilter extends ZuulFilter {
         String className = this.getClass().getSimpleName();
         RequestContext ctx = RequestContext.getCurrentContext();
         HttpServletRequest request = ctx.getRequest();
-        api_id=request.getHeader("api_id");
-        int count = apiUserFilterRepository.countApiUserFiltersByFilterBcEqualsAndApiIdEquals(className,api_id);
-        if (count>0){
+        api_id = request.getHeader("api_id");
+        int count = apiUserFilterRepository.countApiUserFiltersByFilterBcEqualsAndApiIdEquals(className, api_id);
+        if (count > 0) {
             return true;
-        }else {
+        } else {
             return false;
         }
-
     }
 
     @Override
@@ -82,8 +83,7 @@ GeneralFilter extends ZuulFilter {
             RequestContext ctx = RequestContext.getCurrentContext();
             inputStream = ctx.getRequest().getInputStream();
             String body = StreamUtils.copyToString(inputStream, StandardCharsets.UTF_8);
-                ctx.set(GlobalConstants.SENDBODY, body);
-
+            ctx.set(GlobalConstants.SENDBODY, body);
             return null;
         } catch (Exception s) {
             throw new ZtgeoBizZuulException(s, CodeMsg.FAIL, "通用转发过滤器内部异常");
