@@ -7,10 +7,17 @@ import com.jayway.jsonpath.JsonPath;
 import com.netflix.zuul.ZuulFilter;
 import com.netflix.zuul.context.RequestContext;
 import com.netflix.zuul.exception.ZuulException;
+import com.ztgeo.suqian.common.ZtgeoBizZuulException;
+import com.ztgeo.suqian.entity.ag_datashare.ApiJsonKeyFilter;
+import com.ztgeo.suqian.entity.ag_datashare.ApiJsonKeyFilterRepository;
+import com.ztgeo.suqian.entity.ag_datashare.ApiUserFilter;
+import com.ztgeo.suqian.msg.CodeMsg;
+import com.ztgeo.suqian.repository.ApiUserFilterRepository;
 import io.micrometer.core.instrument.util.IOUtils;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
+import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import java.io.InputStream;
 import java.util.Arrays;
@@ -19,7 +26,11 @@ import java.util.List;
 
 @Component
 public class JSONFieldFilter extends ZuulFilter {
-    private String param = "";
+
+    @Resource
+    private ApiUserFilterRepository apiUserFilterRepository;
+    @Resource
+    private ApiJsonKeyFilterRepository apiJsonKeyFilterRepository;
 
     @Override
     public String filterType() {
@@ -37,18 +48,30 @@ public class JSONFieldFilter extends ZuulFilter {
         RequestContext requestContext = RequestContext.getCurrentContext();
         HttpServletRequest httpServletRequest = requestContext.getRequest();
         String api_id = httpServletRequest.getHeader("api_id");
+        int count = apiUserFilterRepository.countApiUserFiltersByFilterBcEqualsAndApiIdEquals(className,api_id);
 
-        return true;
+        if(count == 0){
+            return false;
+        }else{
+            return true;
+        }
     }
 
     @Override
     public Object run() throws ZuulException {
 
-        InputStream stream = RequestContext.getCurrentContext().getResponseDataStream();
+        RequestContext requestContext = RequestContext.getCurrentContext();
+        HttpServletRequest httpServletRequest = requestContext.getRequest();
+        String apiId = httpServletRequest.getHeader("api_id");
+        String fromUser = httpServletRequest.getHeader("from_user");
+
+        InputStream stream = requestContext.getResponseDataStream();
         String body = IOUtils.toString(stream);
         System.out.println(body);
 
-        JSONObject backJson = new JSONObject();
+        // 获取过滤规则
+        ApiJsonKeyFilter apiJsonKeyFilter = apiJsonKeyFilterRepository.findApiJsonKeyFiltersByApiIdEqualsAndFromUserEquals(apiId,fromUser);
+        String param = apiJsonKeyFilter.getFieldList();
 
         JSONObject json = null;
         try {
@@ -68,39 +91,11 @@ public class JSONFieldFilter extends ZuulFilter {
                 json = new JSONObject(context.read("$"));
             }
 
-            backJson.put("msg","true");
-            backJson.put("data",json);
         } catch (Exception e) {
-            e.printStackTrace();
-            backJson.put("msg","false");
-            if(e.getMessage().contains("Missing property in path")){
-                backJson.put("data","JSON过滤规则异常，请先过滤子节点再过滤父节点");
-            }
-
+            throw new ZtgeoBizZuulException(CodeMsg.JSON_KEY_VALUE_FILTER_ERROR);
         }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
         RequestContext.getCurrentContext().setResponseBody(body);
-
-
-
-
         return null;
     }
 }
