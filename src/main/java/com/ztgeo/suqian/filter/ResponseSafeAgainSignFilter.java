@@ -52,12 +52,12 @@ public class ResponseSafeAgainSignFilter extends ZuulFilter {
     private  String uri;
     @Resource
     private ApiJgtoPtFilterRepository apiJgtoPtFilterRepository;
-    @Resource
-    private UserKeyInfoRepository userKeyInfoRepository;
-    @Resource
-    private ApiUserFilterRepository apiUserFilterRepository;
-    @Autowired
-    private RedisOperator redis;
+//    @Resource
+//    private UserKeyInfoRepository userKeyInfoRepository;
+//    @Resource
+//    private ApiUserFilterRepository apiUserFilterRepository;
+//    @Autowired
+//    private RedisOperator redis;
     @Override
     public String filterType() {
         return FilterConstants.POST_TYPE;
@@ -127,7 +127,7 @@ public class ResponseSafeAgainSignFilter extends ZuulFilter {
                 JSONObject jsonObject = JSON.parseObject(rspBody);
                 String data=jsonObject.get("data").toString();
 
-                String   sign = CryptographyOperation.generateSign(Sign_pt_secret_key, data);
+                String  sign = CryptographyOperation.generateSign(Sign_pt_secret_key, data);
                 //重新加载到response中
                 jsonObject.put("sign",sign);
                 String newbody=jsonObject.toString();

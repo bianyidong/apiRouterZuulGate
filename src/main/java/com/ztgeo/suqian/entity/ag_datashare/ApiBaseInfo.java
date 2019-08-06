@@ -18,8 +18,6 @@ public class ApiBaseInfo implements Serializable {
     @Id
     @Column(name = "api_id")
     private String apiId;
-    @Column(name = "api_pubkey")
-    private String apiPubkey;
     @Column(name = "api_name")
     private String apiName;
     @Column(name = "base_url")

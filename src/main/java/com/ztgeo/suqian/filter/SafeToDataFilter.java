@@ -47,10 +47,10 @@ public class SafeToDataFilter extends ZuulFilter {
     private ApiUserFilterRepository apiUserFilterRepository;
     @Resource
     private ApiBaseInfoRepository apiBaseInfoRepository;
-    @Resource
-    private UserKeyInfoRepository userKeyInfoRepository;
-    @Autowired
-    private RedisOperator redis;
+//    @Resource
+//    private UserKeyInfoRepository userKeyInfoRepository;
+//    @Autowired
+//    private RedisOperator redis;
 
     @Override
     public Object run() throws ZuulException {
@@ -64,7 +64,7 @@ public class SafeToDataFilter extends ZuulFilter {
             //1.获取heard中的userID和ApiID
             String apiID=request.getHeader("api_id");
             //2.获取body中的解密后的数据
-            InputStream in = ctx.getRequest().getInputStream();
+            InputStream in = request.getInputStream();
             String body = StreamUtils.copyToString(in, Charset.forName("UTF-8"));
             JSONObject jsonObject = JSON.parseObject(body);
             String data=jsonObject.get("data").toString();

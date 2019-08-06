@@ -49,14 +49,15 @@ public class ResponseSafeToSignFilter extends ZuulFilter {
     private static Logger log = LoggerFactory.getLogger(ResponseSafeToSignFilter.class);
     private String api_id;
     private String Sign_pub_keyapiUserIDJson;
-    @Resource
-    private UserKeyInfoRepository userKeyInfoRepository;
+//    @Resource
+//    private UserKeyInfoRepository userKeyInfoRepository;
+//    @Autowired
+//    private RedisOperator redis;
     @Resource
     private ApiUserFilterRepository apiUserFilterRepository;
     @Resource
     private ApiBaseInfoRepository apiBaseInfoRepository;
-    @Autowired
-    private RedisOperator redis;
+
     @Override
     public String filterType() {
         return FilterConstants.POST_TYPE;
@@ -125,6 +126,7 @@ public class ResponseSafeToSignFilter extends ZuulFilter {
                 JSONObject jsonObject = JSON.parseObject(rspBody);
                 String data=jsonObject.get("data").toString();
                 String sign=jsonObject.get("sign").toString();
+
                 // 验证签名
                 boolean rspVerifyResult = CryptographyOperation.signatureVerify(Sign_pub_keyapiUserIDJson, data, sign);
                 if (Objects.equals(rspVerifyResult, false))

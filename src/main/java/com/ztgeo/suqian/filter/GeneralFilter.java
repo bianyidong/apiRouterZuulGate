@@ -32,8 +32,6 @@ GeneralFilter extends ZuulFilter {
     private String api_id;
     @Resource
     private ApiUserFilterRepository apiUserFilterRepository;
-    @Value("${customAttributes.dbName}")
-    private String dbName; // 存储用户发送数据的数据库名
 
     /**
      * 过滤器的类型
@@ -63,16 +61,17 @@ GeneralFilter extends ZuulFilter {
      */
     @Override
     public boolean shouldFilter() {
-        String className = this.getClass().getSimpleName();
-        RequestContext ctx = RequestContext.getCurrentContext();
-        HttpServletRequest request = ctx.getRequest();
-        api_id = request.getHeader("api_id");
-        int count = apiUserFilterRepository.countApiUserFiltersByFilterBcEqualsAndApiIdEquals(className, api_id);
-        if (count > 0) {
-            return true;
-        } else {
-            return false;
-        }
+//        String className = this.getClass().getSimpleName();
+//        RequestContext ctx = RequestContext.getCurrentContext();
+//        HttpServletRequest request = ctx.getRequest();
+//        api_id = request.getHeader("api_id");
+//        int count = apiUserFilterRepository.countApiUserFiltersByFilterBcEqualsAndApiIdEquals(className, api_id);
+//        if (count > 0) {
+//            return true;
+//        } else {
+//            return false;
+//        }
+        return true;
     }
 
     @Override

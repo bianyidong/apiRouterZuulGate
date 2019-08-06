@@ -51,14 +51,15 @@ public class SafeToSignFilter extends ZuulFilter {
     private static Logger log = LoggerFactory.getLogger(SafeToSignFilter.class);
     private String api_id;
     private String Sign_pt_secret_key;
-    @Resource
-    private UserKeyInfoRepository userKeyInfoRepository;
+//    @Resource
+//    private UserKeyInfoRepository userKeyInfoRepository;
+//    @Autowired
+//    private RedisOperator redis;
     @Resource
     private ApiBaseInfoRepository apiBaseInfoRepository;
     @Resource
     private ApiUserFilterRepository apiUserFilterRepository;
-    @Autowired
-    private RedisOperator redis;
+
 
     @Override
     public Object run() throws ZuulException {
@@ -72,7 +73,7 @@ public class SafeToSignFilter extends ZuulFilter {
             //1.获取heard中的userID和ApiID
             String apiID=request.getHeader("api_id");
             //2.获取body中的解密后的数据
-            InputStream in = ctx.getRequest().getInputStream();
+            InputStream in = request.getInputStream();
             String body = StreamUtils.copyToString(in, Charset.forName("UTF-8"));
             JSONObject jsonObject = JSON.parseObject(body);
             String data=jsonObject.get("data").toString();

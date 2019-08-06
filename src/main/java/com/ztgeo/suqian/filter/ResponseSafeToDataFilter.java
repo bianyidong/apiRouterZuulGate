@@ -49,14 +49,15 @@ public class ResponseSafeToDataFilter extends ZuulFilter {
     private static Logger log = LoggerFactory.getLogger(ResponseSafeToDataFilter.class);
     private String api_id;
     private String Symmetric_pubkeyapiUserIDJson;
-    @Resource
-    private UserKeyInfoRepository userKeyInfoRepository;
+    //    @Resource
+//    private UserKeyInfoRepository userKeyInfoRepository;
+//    @Autowired
+//    private RedisOperator redis;
     @Resource
     private ApiUserFilterRepository apiUserFilterRepository;
     @Resource
     private ApiBaseInfoRepository apiBaseInfoRepository;
-    @Autowired
-    private RedisOperator redis;
+
 
     @Override
     public String filterType() {
@@ -120,8 +121,8 @@ public class ResponseSafeToDataFilter extends ZuulFilter {
 //                    throw new ZtgeoBizRuntimeException(CodeMsg.FAIL, "未查询到返回安全解密密钥信息");
 //                }
 //            }
-            ApiBaseInfo apiBaseInfo=apiBaseInfoRepository.queryApiBaseInfoByApiId(apiID);
-            Symmetric_pubkeyapiUserIDJson=apiBaseInfo.getSymmetricPubkey();
+            ApiBaseInfo apiBaseInfo = apiBaseInfoRepository.queryApiBaseInfoByApiId(apiID);
+            Symmetric_pubkeyapiUserIDJson = apiBaseInfo.getSymmetricPubkey();
 
             String rspBody = ctx.getResponseBody();
             if (!Objects.equals(null, rspBody)) {
@@ -152,6 +153,7 @@ public class ResponseSafeToDataFilter extends ZuulFilter {
                 String rspEncryptData = jsonresponseBody.get("data").toString();
                 String rspSignData = jsonresponseBody.get("sign").toString();
 
+
                 // 解密
                 String rspDecryptData = CryptographyOperation.aesDecrypt(Symmetric_pubkeyapiUserIDJson, rspEncryptData);
                 jsonresponseBody.put("data", rspDecryptData);
@@ -163,7 +165,7 @@ public class ResponseSafeToDataFilter extends ZuulFilter {
             } else {
                 log.info("返回安全解密过滤器记录完成");
             }
-            ctx.set(GlobalConstants.RECORD_PRIMARY_KEY,recordID);
+            ctx.set(GlobalConstants.RECORD_PRIMARY_KEY, recordID);
             ctx.set(GlobalConstants.ACCESS_IP_KEY, accessClientIp);
             return null;
         } catch (ZuulException z) {

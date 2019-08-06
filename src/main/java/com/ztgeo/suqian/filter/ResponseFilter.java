@@ -5,7 +5,6 @@ import com.netflix.zuul.context.RequestContext;
 import com.netflix.zuul.exception.ZuulException;
 import com.ztgeo.suqian.common.GlobalConstants;
 import com.ztgeo.suqian.common.ZtgeoBizZuulException;
-
 import com.ztgeo.suqian.msg.CodeMsg;
 import com.ztgeo.suqian.repository.ApiUserFilterRepository;
 import com.ztgeo.suqian.utils.StreamOperateUtils;
@@ -15,14 +14,11 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.netflix.zuul.filters.support.FilterConstants;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StreamUtils;
-
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import java.io.*;
-
 import java.nio.charset.StandardCharsets;
 import java.util.Objects;
-
 
 /**
  * 响应过滤器
@@ -37,8 +33,6 @@ public class ResponseFilter extends ZuulFilter {
     private String api_id;
     @Resource
     private ApiUserFilterRepository apiUserFilterRepository;
-    @Value("${customAttributes.dbName}")
-    private String dbName; // 存储用户发送数据的数据库名
 
     @Override
     public String filterType() {
@@ -52,16 +46,17 @@ public class ResponseFilter extends ZuulFilter {
 
     @Override
     public boolean shouldFilter() {
-        String className = this.getClass().getSimpleName();
-        RequestContext ctx = RequestContext.getCurrentContext();
-        HttpServletRequest request = ctx.getRequest();
-        api_id = request.getHeader("api_id");
-        int count = apiUserFilterRepository.countApiUserFiltersByFilterBcEqualsAndApiIdEquals(className, api_id);
-        if (count > 0) {
-            return true;
-        } else {
-            return false;
-        }
+//        String className = this.getClass().getSimpleName();
+//        RequestContext ctx = RequestContext.getCurrentContext();
+//        HttpServletRequest request = ctx.getRequest();
+//        api_id = request.getHeader("api_id");
+//        int count = apiUserFilterRepository.countApiUserFiltersByFilterBcEqualsAndApiIdEquals(className, api_id);
+//        if (count > 0) {
+//            return true;
+//        } else {
+//            return false;
+//        }
+        return true;
     }
 
     @Override
@@ -79,6 +74,8 @@ public class ResponseFilter extends ZuulFilter {
             Object accessClientIp = ctx.get(GlobalConstants.ACCESS_IP_KEY);
             if (Objects.equals(null, accessClientIp) || Objects.equals(null, recordID))
                 throw new ZtgeoBizZuulException(CodeMsg.FAIL, "post通用过滤器访问者IP或记录ID未获取到");
+
+//            String ContentType=ctx.getRequest().getContentType();
 //            if ("text/xml".equals(ContentType)) {
 //                log.info("请求为text/xml，返回日志不操作");
 //                return null;

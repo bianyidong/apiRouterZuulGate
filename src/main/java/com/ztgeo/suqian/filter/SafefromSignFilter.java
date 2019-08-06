@@ -43,14 +43,15 @@ import static com.ztgeo.suqian.common.GlobalConstants.USER_REDIS_SESSION;
 public class SafefromSignFilter extends ZuulFilter {
 
     private static Logger log = LoggerFactory.getLogger(SafefromSignFilter.class);
-    @Autowired
-    private RedisOperator redis;
+
     private String from_user;
     private String uri;
     private String Sign_pub_key;
 
     @Resource
     private ApiJgtoPtFilterRepository apiJgtoPtFilterRepository;
+//    @Autowired
+//    private RedisOperator redis;
 //    @Resource
 //    private UserKeyInfoRepository userKeyInfoRepository;
 //    @Resource
@@ -66,7 +67,7 @@ public class SafefromSignFilter extends ZuulFilter {
             //1.获取heard中的userID
             String userID=request.getHeader("from_user");
             //2.获取body中的加密和加签数据并验签
-            InputStream in = ctx.getRequest().getInputStream();
+            InputStream in = request.getInputStream();
             String body = StreamUtils.copyToString(in, Charset.forName("UTF-8"));
             JSONObject jsonObject = JSON.parseObject(body);
             String data=jsonObject.get("data").toString();

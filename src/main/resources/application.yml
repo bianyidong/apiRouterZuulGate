@@ -29,6 +29,3 @@ customAttributes:
   # 存储用户发送数据的数据库名
   #接口转发的数据库名
   httpName: "http_db"
-  dbName: "httpGenera_db"
-  #通知的数据库名
-  dbSafeName: "httpSafe_db"

@@ -44,12 +44,13 @@ public class SafefromDataFilter extends ZuulFilter {
     private String from_user;
     private String Symmetric_pubkey;
     private String uri;
-    @Resource
-    private UserKeyInfoRepository userKeyInfoRepository;
+//    @Resource
+//    private UserKeyInfoRepository userKeyInfoRepository;
+//    @Autowired
+//    private RedisOperator redis;
     @Resource
     private ApiJgtoPtFilterRepository apiJgtoPtFilterRepository;
-    @Autowired
-    private RedisOperator redis;
+
 
     @Override
     public Object run() throws ZuulException {
@@ -63,7 +64,7 @@ public class SafefromDataFilter extends ZuulFilter {
             //1.获取heard中的userID
             String userID=request.getHeader("from_user");
             //2.获取body中的加密和加签数据并做解密
-            InputStream in = ctx.getRequest().getInputStream();
+            InputStream in = request.getInputStream();
             String body = StreamUtils.copyToString(in, Charset.forName("UTF-8"));
             JSONObject jsonObject = JSON.parseObject(body);
             String data=jsonObject.get("data").toString();
