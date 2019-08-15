@@ -80,7 +80,7 @@ public class ResponseFilter extends ZuulFilter {
 //                log.info("请求为text/xml，返回日志不操作");
 //                return null;
 //            }
-            if (!Objects.equals(null, inputStream)) {
+            if (!Objects.equals(null, inputStream)&&Objects.equals(null, rspBody)) {
                 // 获取返回的body
                 ByteArrayOutputStream byteArrayOutputStream = StreamOperateUtils.cloneInputStreamToByteArray(inputStream);
                 inputStreamOld = new ByteArrayInputStream(byteArrayOutputStream.toByteArray()); // 原始流

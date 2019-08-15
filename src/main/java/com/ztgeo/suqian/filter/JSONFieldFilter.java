@@ -95,7 +95,7 @@ public class JSONFieldFilter extends ZuulFilter {
             throw new ZtgeoBizZuulException(CodeMsg.JSON_KEY_VALUE_FILTER_ERROR);
         }
 
-        RequestContext.getCurrentContext().setResponseBody(body);
+        RequestContext.getCurrentContext().setResponseBody(json.toJSONString());
         return null;
     }
 }

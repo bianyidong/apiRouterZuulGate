@@ -24,13 +24,13 @@ public class DzYixing implements Serializable {
   @Column(name = "from_user")
   private String fromUser;
 
-  @Column(name = "url")
+  @Column(name = "dzurl")
   private String url;
 
   @Column(name = "content_type")
   private String contentType;
 
-  @Column(name = "method")
+  @Column(name = "dzmethod")
   private String method;
 
   @Column(name = "soapbody_req")
