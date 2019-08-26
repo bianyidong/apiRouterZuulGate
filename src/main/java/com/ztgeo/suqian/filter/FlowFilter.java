@@ -8,6 +8,8 @@ import com.ztgeo.suqian.entity.ag_datashare.ApiFlowConfigRepository;
 import com.ztgeo.suqian.entity.ag_datashare.ApiFlowInst;
 import com.ztgeo.suqian.entity.ag_datashare.ApiFlowInstRepository;
 import com.ztgeo.suqian.utils.StreamOperateUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.cloud.netflix.zuul.filters.support.FilterConstants;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
@@ -23,6 +25,7 @@ import java.text.SimpleDateFormat;
  */
 @Component
 public class FlowFilter extends ZuulFilter {
+    private Logger log = LoggerFactory.getLogger(this.getClass());
 
     @Resource
     private ApiFlowConfigRepository apiFlowConfigRepository;
@@ -67,7 +70,7 @@ public class FlowFilter extends ZuulFilter {
                 int apiViewTotalCount = apiFlowInstRepository.sumCurrentCountFromApiFlowInstsByStartTimeBetweenAnd(Long.valueOf(dayStime),Long.valueOf(dayEtime));
                 int limitTotalCount = apiFlowConfig.getLimitTotalCount();
                 if(apiViewTotalCount >= limitTotalCount){
-                    System.out.println("失败！接口已达最大访问量！");
+                    log.info("失败！接口已达最大访问量！");
                     // 设置zuul过滤当前请求，不对其进行路由
                     requestContext.setSendZuulResponse(false);
                     // 设置返回码
@@ -93,7 +96,7 @@ public class FlowFilter extends ZuulFilter {
                 if(viewCount == 0){
                     apiFlowInstRepository.save(new ApiFlowInst(StreamOperateUtils.getShortUUID(), apiFlowConfig.getLimitObject(), apiId, ip, currentTimeMillis, endTimeMillis,1));
 
-                    System.out.println("空值，成功！");
+                    log.info("空值，成功！");
                 }else{
                     ApiFlowInst apiFlowInst = apiFlowInstRepository.findApiFlowInstsByApiIdEqualsAndIpEqualsOrderByEndTimeDesc(apiId,ip).get(0);
                     long currentMaxEndTime = apiFlowInst.getEndTime();
@@ -101,17 +104,17 @@ public class FlowFilter extends ZuulFilter {
                     if(currentTimeMillis > currentMaxEndTime){
                         apiFlowInstRepository.save(new ApiFlowInst(StreamOperateUtils.getShortUUID(), apiFlowConfig.getLimitObject(), apiId, ip, currentTimeMillis, endTimeMillis,1));
 
-                        System.out.println("超时，成功！");
+                        log.info("超时，成功！");
                     }else{
                         int limitCount = apiFlowConfig.getLimitCount();
                         if(limitCount > currentViewCount){
                             apiFlowInst.setCurrentCount(apiFlowInst.getCurrentCount() + 1);
                             apiFlowInstRepository.save(apiFlowInst);
 
-                            System.out.println("未超时且次数允许，成功！");
+                            log.info("未超时且次数允许，成功！");
                         }else{
 
-                            System.out.println("失败！请求过于频繁！");
+                            log.info("失败！请求过于频繁！");
                             // 设置zuul过滤当前请求，不对其进行路由
                             requestContext.setSendZuulResponse(false);
                             // 设置返回码
