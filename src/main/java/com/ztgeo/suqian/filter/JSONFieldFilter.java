@@ -1,5 +1,6 @@
 package com.ztgeo.suqian.filter;
 
+import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.jayway.jsonpath.Configuration;
 import com.jayway.jsonpath.DocumentContext;
@@ -14,6 +15,7 @@ import com.ztgeo.suqian.entity.ag_datashare.ApiUserFilter;
 import com.ztgeo.suqian.msg.CodeMsg;
 import com.ztgeo.suqian.repository.ApiUserFilterRepository;
 import io.micrometer.core.instrument.util.IOUtils;
+import org.springframework.cloud.netflix.zuul.filters.support.FilterConstants;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
@@ -34,17 +36,17 @@ public class JSONFieldFilter extends ZuulFilter {
 
     @Override
     public String filterType() {
-        return "post";
+        return FilterConstants.POST_TYPE;
     }
 
     @Override
     public int filterOrder() {
-        return 0;
+        return 2;
     }
 
     @Override
     public boolean shouldFilter() {
-        String className = this.getClass().getName();
+        String className = this.getClass().getSimpleName();
         RequestContext requestContext = RequestContext.getCurrentContext();
         HttpServletRequest httpServletRequest = requestContext.getRequest();
         String api_id = httpServletRequest.getHeader("api_id");
@@ -67,8 +69,12 @@ public class JSONFieldFilter extends ZuulFilter {
 
         InputStream stream = requestContext.getResponseDataStream();
         String body = IOUtils.toString(stream);
+       // String body="{ \"apiName\":\"mortgageRegister\",\"charst\":\"utf-8\"}";
+       // String body=requestContext.getResponseBody();
         System.out.println(body);
-
+//        JSONObject jsonObject = JSON.parseObject(body);
+//        String data = jsonObject.get("data").toString();
+//        String sign = jsonObject.get("sign").toString();
         // 获取过滤规则
         ApiJsonKeyFilter apiJsonKeyFilter = apiJsonKeyFilterRepository.findApiJsonKeyFiltersByApiIdEqualsAndFromUserEquals(apiId,fromUser);
         String param = apiJsonKeyFilter.getFieldList();
