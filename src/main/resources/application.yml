@@ -29,3 +29,5 @@ customAttributes:
   # 存储用户发送数据的数据库名
   #接口转发的数据库名
   httpName: "http_db"
+yxtokenpath: http://192.168.1.251:1104/public/oauth/token
+

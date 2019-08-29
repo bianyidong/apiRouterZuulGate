@@ -11,10 +11,12 @@ import com.ztgeo.suqian.entity.ag_datashare.ApiBaseInfo;
 import com.ztgeo.suqian.entity.ag_datashare.DzYixing;
 import com.ztgeo.suqian.repository.ApiBaseInfoRepository;
 import com.ztgeo.suqian.repository.DzYixingRepository;
+import com.ztgeo.suqian.utils.HttpOperation;
 import com.ztgeo.suqian.utils.XmlAndJsonUtils;
 import com.ztgeo.suqian.msg.CodeMsg;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.netflix.zuul.filters.support.FilterConstants;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
@@ -31,6 +33,9 @@ import java.util.List;
 @Component
 public class YXLTReqDZFilter extends ZuulFilter {
     private Logger log = LoggerFactory.getLogger(this.getClass());
+
+    @Value(value = "${yxtokenpath}")
+    private String YXTOKENREQPATH;
 
     @Resource
     private DzYixingRepository dzYixingRepository;
@@ -107,6 +112,18 @@ public class YXLTReqDZFilter extends ZuulFilter {
             ctx.set("api_id", dzYixing.getApiId());
             ctx.set("from_user", dzYixing.getFromUser());
 
+            // 宜兴接口访问需要ＴＯＫＥＮ
+            String tokenReqJsonString = "{\"ClientId\":\"098f6bcd4621d373cade4e832627b4f6\",\"PlatformCode\":\"0\",\"UserName\":\"yxds\"}";
+            String tokenJsonString = HttpOperation.sendJsonHttp(YXTOKENREQPATH,tokenReqJsonString);
+            JSONObject tokenJson = JSONObject.parseObject(tokenJsonString);
+            String status = tokenJson.getString("status");
+            if("0".equals(status)){
+                String token = tokenJson.getJSONObject("data").getString("accessToken");
+                ctx.addZuulRequestHeader("Authorization",token);
+            }else{
+                throw new ZtgeoBizZuulException(CodeMsg.YXLT_DZ_TOKEN_ERROR);
+            }
+
             // 为写日志设置body体信息;
             ctx.set(GlobalConstants.SENDBODY, jsonReqStr.toJSONString());
             // 从数据库中获取定制URL真正的转发地址
@@ -155,7 +172,6 @@ public class YXLTReqDZFilter extends ZuulFilter {
             });
 
         } catch (Exception e) {
-            e.printStackTrace();
             throw new ZtgeoBizZuulException(CodeMsg.YXLT_DZ_REQ_ERROR);
         }
         return null;
