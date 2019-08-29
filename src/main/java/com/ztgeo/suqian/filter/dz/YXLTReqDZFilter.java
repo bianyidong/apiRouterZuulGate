@@ -133,6 +133,11 @@ public class YXLTReqDZFilter extends ZuulFilter {
                 }
 
                 @Override
+                public String getContentType() {
+                    return "application/json";
+                }
+
+                @Override
                 public int getContentLength() {
                     return reqBodyBytes.length;
                 }

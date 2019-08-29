@@ -50,11 +50,10 @@ public class JSONFieldFilter extends ZuulFilter {
         RequestContext requestContext = RequestContext.getCurrentContext();
         HttpServletRequest httpServletRequest = requestContext.getRequest();
         String api_id = httpServletRequest.getHeader("api_id");
-        int count = apiUserFilterRepository.countApiUserFiltersByFilterBcEqualsAndApiIdEquals(className,api_id);
-
-        if(count == 0){
+        int count = apiUserFilterRepository.countApiUserFiltersByFilterBcEqualsAndApiIdEquals(className, api_id);
+        if (count == 0) {
             return false;
-        }else{
+        } else {
             return true;
         }
     }
@@ -67,16 +66,17 @@ public class JSONFieldFilter extends ZuulFilter {
         String apiId = httpServletRequest.getHeader("api_id");
         String fromUser = httpServletRequest.getHeader("from_user");
 
-        InputStream stream = requestContext.getResponseDataStream();
-        String body = IOUtils.toString(stream);
-       // String body="{ \"apiName\":\"mortgageRegister\",\"charst\":\"utf-8\"}";
-       // String body=requestContext.getResponseBody();
+//        InputStream stream = requestContext.getResponseDataStream();
+//        String body = IOUtils.toString(stream);
+        String body = requestContext.getResponseBody();
         System.out.println(body);
-//        JSONObject jsonObject = JSON.parseObject(body);
-//        String data = jsonObject.get("data").toString();
-//        String sign = jsonObject.get("sign").toString();
+        JSONObject jsonObject = JSON.parseObject(body);
+        if (jsonObject.containsKey("data") && jsonObject.containsKey("sign")) {
+            body = jsonObject.get("data").toString();
+        }
+
         // 获取过滤规则
-        ApiJsonKeyFilter apiJsonKeyFilter = apiJsonKeyFilterRepository.findApiJsonKeyFiltersByApiIdEqualsAndFromUserEquals(apiId,fromUser);
+        ApiJsonKeyFilter apiJsonKeyFilter = apiJsonKeyFilterRepository.findApiJsonKeyFiltersByApiIdEqualsAndFromUserEquals(apiId, fromUser);
         String param = apiJsonKeyFilter.getFieldList();
 
         JSONObject json = null;
@@ -85,9 +85,9 @@ public class JSONFieldFilter extends ZuulFilter {
             List<String> paramList = Arrays.asList(param.split(","));
             Configuration conf = Configuration.builder().build();
             DocumentContext context = null;
-            for (String rule:paramList) {
+            for (String rule : paramList) {
 
-                if(StringUtils.isEmpty(json)){
+                if (StringUtils.isEmpty(json)) {
                     context = JsonPath.using(conf).parse(body);
                     json = new JSONObject(context.read("$"));
                 }
@@ -100,8 +100,12 @@ public class JSONFieldFilter extends ZuulFilter {
         } catch (Exception e) {
             throw new ZtgeoBizZuulException(CodeMsg.JSON_KEY_VALUE_FILTER_ERROR);
         }
-
-        RequestContext.getCurrentContext().setResponseBody(json.toJSONString());
+        if (jsonObject.containsKey("data") && jsonObject.containsKey("sign")) {
+            jsonObject.put("data", json);
+            RequestContext.getCurrentContext().setResponseBody(jsonObject.toJSONString());
+        } else {
+            RequestContext.getCurrentContext().setResponseBody(json.toJSONString());
+        }
         return null;
     }
 }
