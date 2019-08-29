@@ -79,9 +79,9 @@ public class YXLTRespDZFilter extends ZuulFilter {
             xml = xml.replaceAll("<jslt3BizPackage>", "<jslt3BizPackage version=\"1.0\">");
             log.info("转换XML：" + xml);
 
-            // 对<>进行转义
-            xml = xml.replaceAll("<", "&lt;");
-            xml = xml.replaceAll(">", "&gt;");
+//            // 对<>进行转义
+//            xml = xml.replaceAll("<", "&lt;");
+//            xml = xml.replaceAll(">", "&gt;");
 
             // 通过请求地址再次将定制实例查询
             DzYixing dzYixing = dzYixingRepository.findDzYixingsByApiIdEquals(ctx.get("api_id").toString());

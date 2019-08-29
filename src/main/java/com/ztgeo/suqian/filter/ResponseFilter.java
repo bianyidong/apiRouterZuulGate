@@ -88,6 +88,7 @@ public class ResponseFilter extends ZuulFilter {
                 inputStreamNew = inputStreamOld;
                 // 获取返回的body字符串
                 String responseBody = StreamUtils.copyToString(inputStreamOld, StandardCharsets.UTF_8);
+
                 if (Objects.equals(null, responseBody)) {
                     throw new ZtgeoBizZuulException(CodeMsg.FAIL, "post通用过滤器响应报文未获取到");
                 }
@@ -96,7 +97,7 @@ public class ResponseFilter extends ZuulFilter {
                 ctx.setResponseDataStream(inputStreamNew);
             } else if (!Objects.equals(null, rspBody)) {
                 ctx.setResponseBody(rspBody);
-                log.info("post通用过滤器入库完成");
+                log.info("post通用过滤器入库完成(respBody is null)");
             } else {
                 log.info("未接收到返回的任何数据,记录ID:{}", recordID);
 
