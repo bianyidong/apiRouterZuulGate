@@ -69,7 +69,7 @@ public class FlowFilter extends ZuulFilter {
                 String dayStime = setime.split(",")[0];
                 String dayEtime = setime.split(",")[1];
 
-                int apiViewTotalCount = apiFlowInstRepository.sumCurrentCountFromApiFlowInstsByStartTimeBetweenAnd(Long.valueOf(dayStime),Long.valueOf(dayEtime));
+                int apiViewTotalCount = apiFlowInstRepository.sumCurrentCountFromApiFlowInstsByStartTimeBetweenAnd(apiId,Long.valueOf(dayStime),Long.valueOf(dayEtime));
                 int limitTotalCount = apiFlowConfig.getLimitTotalCount();
                 if(apiViewTotalCount >= limitTotalCount){
                     log.info("失败！接口已达最大访问量！");
