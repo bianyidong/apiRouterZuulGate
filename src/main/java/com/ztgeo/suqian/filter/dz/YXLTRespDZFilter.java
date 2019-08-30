@@ -75,9 +75,11 @@ public class YXLTRespDZFilter extends ZuulFilter {
             xml = xml.replaceAll("utf-8", "GBK");
             xml = xml.replaceAll("UTF-8", "GBK");
             log.info("xml:"+xml);
+
+
             // 增加jstl3BizPackage版本号
-            xml = xml.replaceAll("<jslt3BizPackage>", "<jslt3BizPackage version=\"1.0\">");
-            log.info("转换XML：" + xml);
+//            xml = xml.replaceAll("<jslt3BizPackage>", "<jslt3BizPackage version=\"1.0\">");
+//            log.info("转换XML：" + xml);
 
 //            // 对<>进行转义
 //            xml = xml.replaceAll("<", "&lt;");

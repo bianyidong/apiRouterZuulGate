@@ -63,7 +63,6 @@ public class YXLTReqDZFilter extends ZuulFilter {
         HttpServletRequest httpServletRequest = ctx.getRequest();
         // 获取请求方法名及对应的定制配置信息
         String requestURI = httpServletRequest.getRequestURI();
-        System.out.println(requestURI);
         DzYixing dzYixing = dzYixingRepository.findDzYixingsByUrlEquals(requestURI);
         if (StringUtils.isEmpty(dzYixing)) {
             return false;
@@ -119,6 +118,7 @@ public class YXLTReqDZFilter extends ZuulFilter {
             String status = tokenJson.getString("status");
             if("0".equals(status)){
                 String token = tokenJson.getJSONObject("data").getString("accessToken");
+                log.info("宜兴地税访问token:" + token);
                 ctx.addZuulRequestHeader("Authorization",token);
             }else{
                 throw new ZtgeoBizZuulException(CodeMsg.YXLT_DZ_TOKEN_ERROR);
