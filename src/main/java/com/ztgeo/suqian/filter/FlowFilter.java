@@ -3,10 +3,12 @@ package com.ztgeo.suqian.filter;
 import com.netflix.zuul.ZuulFilter;
 import com.netflix.zuul.context.RequestContext;
 import com.netflix.zuul.exception.ZuulException;
+import com.ztgeo.suqian.common.ZtgeoBizZuulException;
 import com.ztgeo.suqian.entity.ag_datashare.ApiFlowConfig;
 import com.ztgeo.suqian.entity.ag_datashare.ApiFlowConfigRepository;
 import com.ztgeo.suqian.entity.ag_datashare.ApiFlowInst;
 import com.ztgeo.suqian.entity.ag_datashare.ApiFlowInstRepository;
+import com.ztgeo.suqian.msg.CodeMsg;
 import com.ztgeo.suqian.utils.StreamOperateUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -54,8 +56,8 @@ public class FlowFilter extends ZuulFilter {
 
             RequestContext requestContext = RequestContext.getCurrentContext();
             HttpServletRequest httpServletRequest = requestContext.getRequest();
-            //String apiId = httpServletRequest.getHeader("api_id");
-            String apiId = "1h5OiYUA";
+            String apiId = httpServletRequest.getHeader("api_id");
+            //String apiId = "1h5OiYUA";
             String ip = getRealIP(httpServletRequest);
             // 判断逻辑
             ApiFlowConfig apiFlowConfig = apiFlowConfigRepository.findApiFlowConfigsByApiIdEquals(apiId);
@@ -72,10 +74,11 @@ public class FlowFilter extends ZuulFilter {
                 if(apiViewTotalCount >= limitTotalCount){
                     log.info("失败！接口已达最大访问量！");
                     // 设置zuul过滤当前请求，不对其进行路由
-                    requestContext.setSendZuulResponse(false);
+                    //requestContext.setSendZuulResponse(false);
                     // 设置返回码
-                    requestContext.setResponseStatusCode(401);
-                    return null;
+                    //requestContext.setResponseStatusCode(401);
+                    throw new ZtgeoBizZuulException(CodeMsg.FAILMAXSCOUNT,"限流访问异常");
+
                 }
 
 
@@ -123,6 +126,8 @@ public class FlowFilter extends ZuulFilter {
                     }
                 }
             }
+        } catch (ZuulException z) {
+            throw new ZtgeoBizZuulException(z.getMessage(), z.nStatusCode, z.errorCause);
         } catch (Exception e) {
             e.printStackTrace();
             System.out.println("异常啦！");
