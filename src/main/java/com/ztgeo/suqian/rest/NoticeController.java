@@ -75,29 +75,29 @@ public class NoticeController {
             String sign = jsonObject.get("sign").toString();
             if (StringUtils.isBlank(data) || StringUtils.isBlank(sign))
                 throw new ZtgeoBizZuulException(CodeMsg.PARAMS_ERROR, "未获取到通知数据或签名");
-//            //获取redis中的key值
-//            String str = redis.get(USER_REDIS_SESSION +":"+userID);
-//            if (StringUtils.isBlank(str)){
-//                UserKeyInfo userKeyInfo=userKeyInfoRepository.findByUserRealIdEquals(userID);
-//                Symmetric_pubkey=userKeyInfo.getSymmetricPubkey();
-//                SignPubKey=userKeyInfo.getSignPubKey();
-//                JSONObject setjsonObject = new JSONObject();
-//                setjsonObject.put("Symmetric_pubkey",userKeyInfo.getSymmetricPubkey());
-//                setjsonObject.put("Sign_secret_key", userKeyInfo.getSignSecretKey());
-//                setjsonObject.put("Sign_pub_key",userKeyInfo.getSignPubKey());
-//                setjsonObject.put("Sign_pt_secret_key",userKeyInfo.getSignPtSecretKey());
-//                setjsonObject.put("Sign_pt_pub_key",userKeyInfo.getSignPtPubKey());
-//                //存入Redis
-//                redis.set(USER_REDIS_SESSION +":"+userID, setjsonObject.toJSONString());
-//            }else {
-//                JSONObject getjsonObject = JSONObject.parseObject(str);
-//                Symmetric_pubkey=getjsonObject.getString("Symmetric_pubkey");
-//                SignPubKey=getjsonObject.getString("Sign_pub_key");
-//                if (StringUtils.isBlank(Symmetric_pubkey)){
-//                    log.info("未查询到通知请求方密钥信息");
-//                    throw new ZtgeoBizRuntimeException(CodeMsg.FAIL, "未查询到通知请求方密钥信息");
-//                }
-//            }
+            //获取redis中的key值
+            String str = redis.get(USER_REDIS_SESSION +":"+userID);
+            if (StringUtils.isBlank(str)){
+                UserKeyInfo userKeyInfo=userKeyInfoRepository.findByUserRealIdEquals(userID);
+                Symmetric_pubkey=userKeyInfo.getSymmetricPubkey();
+                SignPubKey=userKeyInfo.getSignPubKey();
+                JSONObject setjsonObject = new JSONObject();
+                setjsonObject.put("Symmetric_pubkey",userKeyInfo.getSymmetricPubkey());
+                setjsonObject.put("Sign_secret_key", userKeyInfo.getSignSecretKey());
+                setjsonObject.put("Sign_pub_key",userKeyInfo.getSignPubKey());
+                setjsonObject.put("Sign_pt_secret_key",userKeyInfo.getSignPtSecretKey());
+                setjsonObject.put("Sign_pt_pub_key",userKeyInfo.getSignPtPubKey());
+                //存入Redis
+                redis.set(USER_REDIS_SESSION +":"+userID, setjsonObject.toJSONString());
+            }else {
+                JSONObject getjsonObject = JSONObject.parseObject(str);
+                Symmetric_pubkey=getjsonObject.getString("Symmetric_pubkey");
+                SignPubKey=getjsonObject.getString("Sign_pub_key");
+                if (StringUtils.isBlank(Symmetric_pubkey)){
+                    log.info("未查询到通知请求方密钥信息");
+                    throw new ZtgeoBizRuntimeException(CodeMsg.FAIL, "未查询到通知请求方密钥信息");
+                }
+            }
             // 验证签名
             boolean verifyResult = CryptographyOperation.signatureVerify(SignPubKey, data, sign);
             if (Objects.equals(verifyResult, false)) {

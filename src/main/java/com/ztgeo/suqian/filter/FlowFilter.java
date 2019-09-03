@@ -119,9 +119,10 @@ public class FlowFilter extends ZuulFilter {
 
                             log.info("失败！请求过于频繁！");
                             // 设置zuul过滤当前请求，不对其进行路由
-                            requestContext.setSendZuulResponse(false);
-                            // 设置返回码
-                            requestContext.setResponseStatusCode(401);
+//                            requestContext.setSendZuulResponse(false);
+//                            // 设置返回码
+//                            requestContext.setResponseStatusCode(401);
+                            throw new ZtgeoBizZuulException(CodeMsg.FAILQUILK,"限流访问异常");
                         }
                     }
                 }
