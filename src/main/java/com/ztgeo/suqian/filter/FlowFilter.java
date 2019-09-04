@@ -9,6 +9,7 @@ import com.ztgeo.suqian.entity.ag_datashare.ApiFlowConfigRepository;
 import com.ztgeo.suqian.entity.ag_datashare.ApiFlowInst;
 import com.ztgeo.suqian.entity.ag_datashare.ApiFlowInstRepository;
 import com.ztgeo.suqian.msg.CodeMsg;
+import com.ztgeo.suqian.repository.ApiUserFilterRepository;
 import com.ztgeo.suqian.utils.StreamOperateUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,7 +34,9 @@ public class FlowFilter extends ZuulFilter {
     private ApiFlowConfigRepository apiFlowConfigRepository;
     @Resource
     private ApiFlowInstRepository apiFlowInstRepository;
-
+    @Resource
+    private ApiUserFilterRepository apiUserFilterRepository;
+    private String api_id;
     @Override
     public String filterType() {
         return FilterConstants.PRE_TYPE;
@@ -46,7 +49,18 @@ public class FlowFilter extends ZuulFilter {
 
     @Override
     public boolean shouldFilter() {
-        return true;
+        String className = this.getClass().getSimpleName();
+        RequestContext requestContext = RequestContext.getCurrentContext();
+        HttpServletRequest httpServletRequest = requestContext.getRequest();
+        api_id = httpServletRequest.getHeader("api_id");
+        int count = apiUserFilterRepository.countApiUserFiltersByFilterBcEqualsAndApiIdEquals(className,api_id);
+
+        if(count == 0){
+            return false;
+        }else{
+
+            return true;
+        }
     }
 
     @Override
