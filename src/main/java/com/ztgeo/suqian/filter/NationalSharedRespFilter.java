@@ -4,13 +4,11 @@ import com.alibaba.fastjson.JSONObject;
 import com.netflix.zuul.ZuulFilter;
 import com.netflix.zuul.context.RequestContext;
 import com.netflix.zuul.exception.ZuulException;
-import com.netflix.zuul.http.ServletInputStreamWrapper;
 import com.ztgeo.suqian.entity.ag_datashare.ApiNotionalSharedConfig;
 import com.ztgeo.suqian.repository.ApiNotionalSharedConfigRepository;
 import com.ztgeo.suqian.repository.ApiUserFilterRepository;
 import com.ztgeo.suqian.utils.RSAUtils;
 import com.ztgeo.suqian.utils.StreamOperateUtils;
-import io.micrometer.core.instrument.util.IOUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cloud.netflix.zuul.filters.support.FilterConstants;
 import org.springframework.data.redis.core.StringRedisTemplate;
@@ -18,19 +16,13 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.StreamUtils;
 
 import javax.annotation.Resource;
-import javax.servlet.ServletInputStream;
 import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletRequestWrapper;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import java.io.InputStream;
-import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
-import java.text.SimpleDateFormat;
-import java.util.Date;
 import java.util.concurrent.TimeUnit;
-//nndd
+
 @Component
 public class NationalSharedRespFilter extends ZuulFilter {
 
