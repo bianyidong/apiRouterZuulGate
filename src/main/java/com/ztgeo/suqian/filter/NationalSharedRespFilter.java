@@ -23,7 +23,7 @@ import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.concurrent.TimeUnit;
 
-@Component
+@Component//
 public class NationalSharedRespFilter extends ZuulFilter {
 
     @Resource
