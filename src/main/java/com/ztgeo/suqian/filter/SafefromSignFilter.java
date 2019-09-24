@@ -43,7 +43,7 @@ import static com.ztgeo.suqian.common.GlobalConstants.USER_REDIS_SESSION;
 public class SafefromSignFilter extends ZuulFilter {
 
     private static Logger log = LoggerFactory.getLogger(SafefromSignFilter.class);
-
+    //访问用户Id
     private String from_user;
     private String uri;
     private String Sign_pub_key;
