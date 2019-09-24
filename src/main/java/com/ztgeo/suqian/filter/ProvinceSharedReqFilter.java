@@ -12,13 +12,13 @@ import com.ztgeo.suqian.msg.CodeMsg;
 import com.ztgeo.suqian.repository.ApiBaseInfoRepository;
 import com.ztgeo.suqian.repository.ApiNotionalSharedConfigRepository;
 import com.ztgeo.suqian.repository.ApiUserFilterRepository;
+import com.ztgeo.suqian.utils.HttpOperation;
 import com.ztgeo.suqian.utils.RSAUtils;
 import io.micrometer.core.instrument.util.IOUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cloud.netflix.zuul.filters.support.FilterConstants;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Component;
-import org.springframework.util.StreamUtils;
 
 import javax.annotation.Resource;
 import javax.servlet.ServletInputStream;
@@ -31,8 +31,11 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.concurrent.TimeUnit;
 
+/**
+ *  国土资源部接口---政务外网（省厅大数据中心转发的接口，需要TOKEN验证）
+ */
 @Component
-public class NationalSharedReqFilter extends ZuulFilter {
+public class ProvinceSharedReqFilter extends ZuulFilter {
 
     @Resource
     private ApiUserFilterRepository apiUserFilterRepository;
@@ -60,20 +63,13 @@ public class NationalSharedReqFilter extends ZuulFilter {
         HttpServletRequest httpServletRequest = requestContext.getRequest();
         String api_id = httpServletRequest.getHeader("api_id");
 
-        ApiBaseInfo apiBaseInfo = apiBaseInfoRepository.queryApiBaseInfoByApiId(api_id);
-        String apiOwnerid = apiBaseInfo.getApiOwnerId();
-
         int useCount = apiUserFilterRepository.countApiUserFiltersByFilterBcEqualsAndApiIdEquals(className,api_id);
-        int configCount = apiNotionalSharedConfigRepository.countApiNotionalSharedConfigsByUseridEquals(apiOwnerid);
-
         if(useCount == 0){
             return false;
         }else {
-            if(configCount == 0){
-                return false;
-            }else {
+
                 return true;
-            }
+
         }
     }
 
@@ -85,57 +81,30 @@ public class NationalSharedReqFilter extends ZuulFilter {
             HttpServletRequest httpServletRequest = requestContext.getRequest();
             String api_id = httpServletRequest.getHeader("api_id");
 
-            String userName = httpServletRequest.getHeader("userName");
-            String requestType = httpServletRequest.getHeader("requestType");
-            String businessNumber = httpServletRequest.getHeader("businessNumber");
+            // 判断redis中是否有数据
+            String redisKey = "token:" + api_id;
+            String token = "Bearer " + getProviceToken(redisKey);
 
-            ApiNotionalSharedConfig apiNotionalSharedConfig = apiNotionalSharedConfigRepository.findById(api_id).get();
-
-            String id = apiNotionalSharedConfig.getId();
-            String token = apiNotionalSharedConfig.getToken();
-            String deptName = apiNotionalSharedConfig.getDeptName();
-            String qxdm = apiNotionalSharedConfig.getQxdm();
-
-            // 获取当前日期
-            String currentDays = new SimpleDateFormat("yyyyMMdd").format(new Date());
-            String configKey = currentDays + ":" + qxdm;
-            int xuHao = getXuHao(configKey);
-            String cxqqdh = currentDays + qxdm + String.format("%06d",xuHao);
-
+            requestContext.addZuulRequestHeader("Authorization",token);
 
             InputStream inReq = httpServletRequest.getInputStream();
             String requestBody = IOUtils.toString(inReq,Charset.forName("UTF-8"));
 
-            // 组织数据 待请求国家共享平台接口
-            JSONObject contryReqJson = new JSONObject();
-
-            // 配置请求头信息
-            JSONObject contryHeadReqJson = new JSONObject();
-            contryHeadReqJson.put("id",id);
-            contryHeadReqJson.put("token",token);
-            contryHeadReqJson.put("deptName",deptName);
-            contryHeadReqJson.put("userName",userName);
-            contryHeadReqJson.put("requestType",requestType);
-            contryHeadReqJson.put("cxqqbh",cxqqdh);
-            contryHeadReqJson.put("businessNumber",businessNumber);
-
-            // 配置请求体
-            String encodeRequestBody = RSAUtils.encodeByPublic(requestBody,token);
-
-            // 配置请求参数
-            contryReqJson.put("head",contryHeadReqJson);
-            contryReqJson.put("param",encodeRequestBody);
 
             // 重新配置请求体
             // 将JSON设置到请求体中，并设置请求方式为POST
-            String newbody = contryReqJson.toJSONString();
             // BODY体设置
-            final byte[] reqBodyBytes = newbody.getBytes();
+            final byte[] reqBodyBytes = requestBody.getBytes();
             requestContext.setRequest(new HttpServletRequestWrapper(httpServletRequest) {
 
                 @Override
                 public String getMethod() {
                     return "POST";
+                }
+
+                @Override
+                public String getContentType() {
+                    return "application/json;charset=utf-8";
                 }
 
                 @Override
@@ -154,29 +123,35 @@ public class NationalSharedReqFilter extends ZuulFilter {
                 }
 
             });
-
-
-
-
         } catch (Exception e) {
-            throw new ZtgeoBizZuulException(e, CodeMsg.NATIONALSHARED_ERROR, "转发国家共享接口异常");
+            throw new ZtgeoBizZuulException(e, CodeMsg.PROVICESHARED_ERROR, "转发国家共享接口异常");
         }
 
 
         return null;
     }
 
-    // 序号获取与配置
-    private synchronized int getXuHao(String configKey) {
+    // token获取与配置
+    private synchronized String getProviceToken(String configKey) {
         boolean totalIsHasKey = redisTemplate.hasKey(configKey);
+
+        // 不存在
         if (!totalIsHasKey) {
-            redisTemplate.opsForValue().set(configKey, "1");
-            redisTemplate.expire(configKey, 2, TimeUnit.DAYS);
-            return 1;
+            String token = null;
+            String tokenUrl = "https://2.211.38.98:8343/v1/apigw/oauth2/token";
+            String tokenParam = "grant_type=client_credentials&client_id=8947f32223bf4174bc7a014a96666ffc&client_secret=2805d50ef71246d3a394e078ba4a68fc&scope=default";
+            String tokenRespStr = HttpOperation.sendPostByApplicationXwwwFromUrlendcoded(tokenUrl,tokenParam);
+            JSONObject tokenRespJson = JSONObject.parseObject(tokenRespStr);
+            token = tokenRespJson.getString("access_token");
+
+            redisTemplate.opsForValue().set(configKey, token);
+            redisTemplate.expire(configKey, 3333, TimeUnit.SECONDS);
+
+            return token;
         }else{
-            int xuhao = Integer.valueOf(redisTemplate.opsForValue().get(configKey)) + 1;
-            redisTemplate.opsForValue().set(configKey,String.valueOf(xuhao));
-            return xuhao;
+            // 存在
+            String token = redisTemplate.opsForValue().get(configKey);
+            return token;
         }
     }
 }

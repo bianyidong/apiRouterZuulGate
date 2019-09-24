@@ -4,7 +4,11 @@ import com.alibaba.fastjson.JSONObject;
 import com.netflix.zuul.ZuulFilter;
 import com.netflix.zuul.context.RequestContext;
 import com.netflix.zuul.exception.ZuulException;
+import com.ztgeo.suqian.common.ZtgeoBizZuulException;
+import com.ztgeo.suqian.entity.ag_datashare.ApiBaseInfo;
 import com.ztgeo.suqian.entity.ag_datashare.ApiNotionalSharedConfig;
+import com.ztgeo.suqian.msg.CodeMsg;
+import com.ztgeo.suqian.repository.ApiBaseInfoRepository;
 import com.ztgeo.suqian.repository.ApiNotionalSharedConfigRepository;
 import com.ztgeo.suqian.repository.ApiUserFilterRepository;
 import com.ztgeo.suqian.utils.RSAUtils;
@@ -29,6 +33,8 @@ public class NationalSharedRespFilter extends ZuulFilter {
     @Resource
     private ApiUserFilterRepository apiUserFilterRepository;
     @Resource
+    private ApiBaseInfoRepository apiBaseInfoRepository;
+    @Resource
     private ApiNotionalSharedConfigRepository apiNotionalSharedConfigRepository;
     @Autowired
     private StringRedisTemplate redisTemplate;
@@ -49,12 +55,21 @@ public class NationalSharedRespFilter extends ZuulFilter {
         RequestContext requestContext = RequestContext.getCurrentContext();
         HttpServletRequest httpServletRequest = requestContext.getRequest();
         String api_id = httpServletRequest.getHeader("api_id");
-        int count = apiUserFilterRepository.countApiUserFiltersByFilterBcEqualsAndApiIdEquals(className,api_id);
 
-        if(count == 0){
+        ApiBaseInfo apiBaseInfo = apiBaseInfoRepository.queryApiBaseInfoByApiId(api_id);
+        String apiOwnerid = apiBaseInfo.getApiOwnerId();
+
+        int useCount = apiUserFilterRepository.countApiUserFiltersByFilterBcEqualsAndApiIdEquals(className,api_id);
+        int configCount = apiNotionalSharedConfigRepository.countApiNotionalSharedConfigsByUseridEquals(apiOwnerid);
+
+        if(useCount == 0){
             return false;
         }else {
-            return true;
+            if(configCount == 0){
+                return false;
+            }else {
+                return true;
+            }
         }
     }
 
@@ -89,7 +104,7 @@ public class NationalSharedRespFilter extends ZuulFilter {
 
 
         } catch (Exception e) {
-            e.printStackTrace();
+            throw new ZtgeoBizZuulException(e, CodeMsg.NATIONALSHARED_ERROR, "转发国家共享接口异常");
         }
 
 
