@@ -85,6 +85,7 @@ public class ProvinceSharedReqFilter extends ZuulFilter {
             String redisKey = "token:" + api_id;
             String token = "Bearer " + getProviceToken(redisKey);
 
+            requestContext.addZuulRequestHeader("Secret","5a9a0db0-387a-4daa-9aac-4ed9f70a50cb@3b91c09c2c254e3981466132faf8360d");
             requestContext.addZuulRequestHeader("Authorization",token);
 
             InputStream inReq = httpServletRequest.getInputStream();
