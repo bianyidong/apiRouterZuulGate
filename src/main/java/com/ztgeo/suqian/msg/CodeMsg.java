@@ -44,7 +44,9 @@ public enum CodeMsg {
     JSON_KEY_VALUE_FILTER_ERROR(508,"JSON响应KEY-VALUE过滤异常！请检查过滤规则！"),
     YXLT_DZ_TOKEN_ERROR(509,"转发不动产请求TOKEN获取失败！"),
     FAILMAXSCOUNT(510,"接口已达最大访问量！"),
-    FAILQUILK(511,"请求过于频繁！");
+    FAILQUILK(511,"请求过于频繁！"),
+    NATIONALSHARED_ERROR(512,"转发国家级共享接口异常！"),
+    PROVICESHARED_ERROR(513,"转发省级共享接口异常！");
 
 
     private CodeMsg(int statusCode, String message) {

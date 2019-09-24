@@ -4,8 +4,10 @@ import com.alibaba.fastjson.JSONObject;
 import com.netflix.zuul.ZuulFilter;
 import com.netflix.zuul.context.RequestContext;
 import com.netflix.zuul.exception.ZuulException;
+import com.ztgeo.suqian.common.ZtgeoBizZuulException;
 import com.ztgeo.suqian.entity.ag_datashare.ApiBaseInfo;
 import com.ztgeo.suqian.entity.ag_datashare.ApiNotionalSharedConfig;
+import com.ztgeo.suqian.msg.CodeMsg;
 import com.ztgeo.suqian.repository.ApiBaseInfoRepository;
 import com.ztgeo.suqian.repository.ApiNotionalSharedConfigRepository;
 import com.ztgeo.suqian.repository.ApiUserFilterRepository;
@@ -102,7 +104,7 @@ public class NationalSharedRespFilter extends ZuulFilter {
 
 
         } catch (Exception e) {
-            e.printStackTrace();
+            throw new ZtgeoBizZuulException(e, CodeMsg.NATIONALSHARED_ERROR, "转发国家共享接口异常");
         }
 
 
