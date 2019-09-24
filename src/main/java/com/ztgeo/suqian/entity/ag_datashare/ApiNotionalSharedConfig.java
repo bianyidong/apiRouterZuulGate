@@ -16,8 +16,8 @@ import java.util.Date;
 @Entity(name = "api_notionalshared_config")
 public class ApiNotionalSharedConfig implements Serializable {
     @Id
-    @Column(name = "api_id")
-    private String apiId;
+    @Column(name = "userid")
+    private String userid;
     @Column(name = "id")
     private String id;
     @Column(name = "token")

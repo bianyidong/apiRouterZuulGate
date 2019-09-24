@@ -9,5 +9,5 @@ import java.util.List;
 
 public interface ApiNotionalSharedConfigRepository extends CrudRepository<ApiNotionalSharedConfig,String> {
 
-
+    int countApiNotionalSharedConfigsByUseridEquals(String userid);
 }
