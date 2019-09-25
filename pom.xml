@@ -140,6 +140,17 @@
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
             </plugin>
+            <plugin>
+                             <artifactId>maven-compiler-plugin</artifactId>
+                               <configuration>
+                                     <source>1.8</source>
+                                    <target>1.8</target>
+                                    <encoding>UTF-8</encoding>
+                                    <compilerArguments>
+                                       <extdirs>src\main\resources\libs</extdirs>
+                                    </compilerArguments>
+                               </configuration>
+            </plugin>
         </plugins>
     </build>
 </project>
