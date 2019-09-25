@@ -47,7 +47,8 @@ public enum CodeMsg {
     FAILQUILK(511,"请求过于频繁！"),
     NATIONALSHARED_ERROR(512,"转发国家级共享接口异常！"),
     PROVICESHARED_ERROR(513,"转发省级共享接口异常！"),
-    CITY_ERROR(514,"转发市级共享接口异常！");
+    CITY_ERROR(514,"转发市级共享接口异常！"),
+    NANKANG_ERROR(515,"转发南康接口异常！");
 
 
     private CodeMsg(int statusCode, String message) {
