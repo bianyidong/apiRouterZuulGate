@@ -1,6 +1,8 @@
 package com.ztgeo.suqian.filter;
 
+import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
+import com.isoftstone.sign.SignGeneration;
 import com.netflix.zuul.ZuulFilter;
 import com.netflix.zuul.context.RequestContext;
 import com.netflix.zuul.exception.ZuulException;
@@ -28,6 +30,7 @@ import java.io.InputStream;
 import java.nio.charset.Charset;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -84,31 +87,34 @@ public class CitySharedReqFilter extends ZuulFilter {
             // 获取配置信息
             ApiCitySharedConfig apiCitySharedConfig = apiCitySharedConfigRepository.findApiCitySharedConfigsByApiIdEquals(api_id);
 
+            // 获取请求参数
             InputStream inReq = httpServletRequest.getInputStream();
             String requestBody = IOUtils.toString(inReq,Charset.forName("UTF-8"));
-            JSONObject requestBodyJson = JSONObject.parseObject(requestBody);
-            requestBodyJson.put("serviceId",apiCitySharedConfig.getServiceId());
-            requestBodyJson.put("sk",apiCitySharedConfig.getSk());
-            requestBodyJson.put("ak",apiCitySharedConfig.getAk());
-            requestBodyJson.put("appId",apiCitySharedConfig.getAppId());
-            requestBodyJson.put("timestamp",new SimpleDateFormat("yyyyMMddHHmmss").format(new Date()));
 
+            // 配置公共部分
+            String sk = apiCitySharedConfig.getSk();
+            JSONObject requestBodyRealJson = new JSONObject();
+            requestBodyRealJson.put("serviceId",apiCitySharedConfig.getServiceId());
+            requestBodyRealJson.put("ak",apiCitySharedConfig.getAk());
+            requestBodyRealJson.put("appId",apiCitySharedConfig.getAppId());
+            requestBodyRealJson.put("timestamp",new SimpleDateFormat("yyyyMMddHHmmss").format(new Date()));
+
+            // 处理请求参数，循环KEY后写入
+            Map<String,Object> requestBodyMap = (Map) JSON.parse(requestBody);
+            for (Map.Entry<String, Object> entry : requestBodyMap.entrySet()) {
+                requestBodyRealJson.put(entry.getKey(),entry.getValue());
+            }
+
+            // 请求加签处理，使用sk
+            Map<String,Object> requestBodyRealMap = (Map) JSON.parse(requestBodyRealJson.toJSONString());
+            String sign = SignGeneration.generationSign(requestBodyRealMap,sk);
+            requestBodyRealJson.put("sign",sign);
 
             // 重新配置请求体
             // 将JSON设置到请求体中，并设置请求方式为POST
             // BODY体设置
-            final byte[] reqBodyBytes = requestBody.getBytes();
+            final byte[] reqBodyBytes = requestBodyRealJson.toJSONString().getBytes();
             requestContext.setRequest(new HttpServletRequestWrapper(httpServletRequest) {
-
-                @Override
-                public String getMethod() {
-                    return "POST";
-                }
-
-                @Override
-                public String getContentType() {
-                    return "application/json;charset=utf-8";
-                }
 
                 @Override
                 public ServletInputStream getInputStream() throws IOException {
@@ -127,34 +133,8 @@ public class CitySharedReqFilter extends ZuulFilter {
 
             });
         } catch (Exception e) {
-            throw new ZtgeoBizZuulException(e, CodeMsg.PROVICESHARED_ERROR, "转发国家共享接口异常");
+            throw new ZtgeoBizZuulException(e, CodeMsg.CITY_ERROR, "转发市级共享接口异常");
         }
-
-
         return null;
-    }
-
-    // token获取与配置
-    private synchronized String getProviceToken(String configKey) {
-        boolean totalIsHasKey = redisTemplate.hasKey(configKey);
-
-        // 不存在
-        if (!totalIsHasKey) {
-            String token = null;
-            String tokenUrl = "https://2.211.38.98:8343/v1/apigw/oauth2/token";
-            String tokenParam = "grant_type=client_credentials&client_id=8947f32223bf4174bc7a014a96666ffc&client_secret=2805d50ef71246d3a394e078ba4a68fc&scope=default";
-            String tokenRespStr = HttpOperation.sendPostByApplicationXwwwFromUrlendcoded(tokenUrl,tokenParam);
-            JSONObject tokenRespJson = JSONObject.parseObject(tokenRespStr);
-            token = tokenRespJson.getString("access_token");
-
-            redisTemplate.opsForValue().set(configKey, token);
-            redisTemplate.expire(configKey, 3333, TimeUnit.SECONDS);
-
-            return token;
-        }else{
-            // 存在
-            String token = redisTemplate.opsForValue().get(configKey);
-            return token;
-        }
     }
 }
