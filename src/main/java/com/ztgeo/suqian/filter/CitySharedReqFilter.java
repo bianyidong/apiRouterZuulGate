@@ -34,7 +34,7 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 /**
- *  国土资源部接口---政务外网（省厅大数据中心转发的接口，需要TOKEN验证）
+ *  宿迁市各部门接口
  */
 @Component
 public class CitySharedReqFilter extends ZuulFilter {
