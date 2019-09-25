@@ -35,7 +35,7 @@ import java.util.concurrent.TimeUnit;
 @Component
 public class SuqianNanKangRespFilter extends ZuulFilter {
 
-    @Value(value = "${nankangkey}")
+    @Value(value = "${sqnankangkey}")
     private String NanKangKey;
 
     @Resource
