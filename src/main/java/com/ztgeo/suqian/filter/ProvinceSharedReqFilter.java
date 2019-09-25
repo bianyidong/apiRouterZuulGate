@@ -87,9 +87,12 @@ public class ProvinceSharedReqFilter extends ZuulFilter {
             InputStream inReq = httpServletRequest.getInputStream();
             String requestBody = IOUtils.toString(inReq,Charset.forName("UTF-8"));
 
+
+
             // 重新配置请求体
             // 将JSON设置到请求体中，并设置请求方式为POST
             // BODY体设置
+
             final byte[] reqBodyBytes = requestBody.getBytes();
             requestContext.setRequest(new HttpServletRequestWrapper(httpServletRequest) {
 
