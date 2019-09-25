@@ -62,14 +62,11 @@ public class ProvinceSharedReqFilter extends ZuulFilter {
         RequestContext requestContext = RequestContext.getCurrentContext();
         HttpServletRequest httpServletRequest = requestContext.getRequest();
         String api_id = httpServletRequest.getHeader("api_id");
-
         int useCount = apiUserFilterRepository.countApiUserFiltersByFilterBcEqualsAndApiIdEquals(className,api_id);
         if(useCount == 0){
             return false;
         }else {
-
                 return true;
-
         }
     }
 
