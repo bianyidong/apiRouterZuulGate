@@ -14,11 +14,14 @@ import com.ztgeo.suqian.repository.ApiNotionalSharedConfigRepository;
 import com.ztgeo.suqian.repository.ApiUserFilterRepository;
 import com.ztgeo.suqian.utils.RSAUtils;
 import io.micrometer.core.instrument.util.IOUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cloud.netflix.zuul.filters.support.FilterConstants;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StreamUtils;
+import org.springframework.util.StringUtils;
 
 import javax.annotation.Resource;
 import javax.servlet.ServletInputStream;
@@ -33,7 +36,7 @@ import java.util.concurrent.TimeUnit;
 
 @Component
 public class NationalSharedReqFilter extends ZuulFilter {
-
+    private static Logger log = LoggerFactory.getLogger(NationalSharedReqFilter.class);
     @Resource
     private ApiUserFilterRepository apiUserFilterRepository;
     @Resource
@@ -89,19 +92,33 @@ public class NationalSharedReqFilter extends ZuulFilter {
             String requestType = httpServletRequest.getHeader("requestType");
             String businessNumber = httpServletRequest.getHeader("businessNumber");
 
-            ApiNotionalSharedConfig apiNotionalSharedConfig = apiNotionalSharedConfigRepository.findById(api_id).get();
+            ApiBaseInfo apiBaseInfo = apiBaseInfoRepository.queryApiBaseInfoByApiId(api_id);
+            String apiOwnerid = apiBaseInfo.getApiOwnerId();
+
+            ApiNotionalSharedConfig apiNotionalSharedConfig = apiNotionalSharedConfigRepository.findById(apiOwnerid).get();
+            log.info("获取国家配置信息：" + JSONObject.toJSONString(apiNotionalSharedConfig));
 
             String id = apiNotionalSharedConfig.getId();
             String token = apiNotionalSharedConfig.getToken();
             String deptName = apiNotionalSharedConfig.getDeptName();
             String qxdm = apiNotionalSharedConfig.getQxdm();
 
-            // 获取当前日期
-            String currentDays = new SimpleDateFormat("yyyyMMdd").format(new Date());
-            String configKey = currentDays + ":" + qxdm;
-            int xuHao = getXuHao(configKey);
-            String cxqqdh = currentDays + qxdm + String.format("%06d",xuHao);
-
+//            // 获取当前日期
+//            String currentDays = new SimpleDateFormat("yyyyMMdd").format(new Date());
+//            String configKey = currentDays + ":" + qxdm;
+//            int xuHao = getXuHao(configKey);
+//            String cxqqdh = currentDays + qxdm + String.format("%06d",xuHao);
+            /**
+             *  20191209  姜志伟要求修改
+             */
+            String cxqqdh = httpServletRequest.getHeader("cxqqdh");
+            if(StringUtils.isEmpty(cxqqdh)){
+                // 为空，非GF99参数，单独获取
+                String currentDays = new SimpleDateFormat("yyyyMMdd").format(new Date());
+                String configKey = currentDays + ":" + qxdm;
+                int xuHao = getXuHao(configKey);
+                cxqqdh = currentDays + qxdm + String.format("%06d", xuHao);
+            }
 
             InputStream inReq = httpServletRequest.getInputStream();
             String requestBody = IOUtils.toString(inReq,Charset.forName("UTF-8"));
@@ -116,7 +133,7 @@ public class NationalSharedReqFilter extends ZuulFilter {
             contryHeadReqJson.put("deptName",deptName);
             contryHeadReqJson.put("userName",userName);
             contryHeadReqJson.put("requestType",requestType);
-            contryHeadReqJson.put("cxqqbh",cxqqdh);
+            contryHeadReqJson.put("cxqqdh",cxqqdh);
             contryHeadReqJson.put("businessNumber",businessNumber);
 
             // 配置请求体
@@ -130,7 +147,7 @@ public class NationalSharedReqFilter extends ZuulFilter {
             // 将JSON设置到请求体中，并设置请求方式为POST
             String newbody = contryReqJson.toJSONString();
             // BODY体设置
-            final byte[] reqBodyBytes = newbody.getBytes();
+            final byte[] reqBodyBytes = newbody.getBytes("UTF-8");
             requestContext.setRequest(new HttpServletRequestWrapper(httpServletRequest) {
 
                 @Override
@@ -155,17 +172,12 @@ public class NationalSharedReqFilter extends ZuulFilter {
 
             });
 
-
-
-
         } catch (Exception e) {
-            throw new ZtgeoBizZuulException(e, CodeMsg.NATIONALSHARED_ERROR, "转发国家共享接口异常");
+            log.info("转发国家级共享接口请求过滤器异常",e);
+            throw new RuntimeException("30012-转发国家级共享接口请求过滤器异常");
         }
-
-
         return null;
     }
-
     // 序号获取与配置
     private synchronized int getXuHao(String configKey) {
         boolean totalIsHasKey = redisTemplate.hasKey(configKey);

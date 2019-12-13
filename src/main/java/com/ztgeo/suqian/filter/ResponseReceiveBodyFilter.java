@@ -62,7 +62,6 @@ public class ResponseReceiveBodyFilter extends ZuulFilter {
             RequestContext ctx = RequestContext.getCurrentContext();
             String userID;
             String requserID= ctx.getRequest().getHeader("from_user");
-
             if(StringUtils.isEmpty(requserID)){
                 String ctxFromUser = ctx.get("from_user").toString();
                 if(StringUtils.isEmpty(ctxFromUser)){
@@ -75,11 +74,6 @@ public class ResponseReceiveBodyFilter extends ZuulFilter {
                 userID = requserID;
             }
             String rspBody = ctx.getResponseBody();
-
-//            // 对<>进行转义
-//            rspBody = rspBody.replaceAll("<", "&lt;");
-//            rspBody = rspBody.replaceAll(">", "&gt;");
-
 
             log.info("接收到返回的数据{}", rspBody);
             //获取记录主键ID(来自routing过滤器保存的上下文)
